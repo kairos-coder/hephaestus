@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hephaestus · The Assembler</title>
+    <title>Hephaestus · The Forge</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -127,7 +127,7 @@
             border: 1px solid #1e2535;
             border-radius: 0.5rem;
             padding: 1rem;
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             font-size: 0.75rem;
             font-family: monospace;
@@ -181,8 +181,8 @@
 </head>
 <body>
 <div class="container">
-    <h1>🔥 Hephaestus · The Assembler</h1>
-    <div class="sub">Forging coherent phrases from Hermes seeds · Semantic affinity · Time-decayed</div>
+    <h1>🔥 Hephaestus · The Forge</h1>
+    <div class="sub">Forging phrases · Saving to hephaestus_phrases · Full lineage</div>
 
     <div class="stats-grid" id="statsGrid">
         <div class="stat-card"><div class="stat-number" id="nounCount">—</div><div class="stat-label">Nouns</div></div>
@@ -193,11 +193,12 @@
     <div class="panel">
         <h2>🔨 Forged Phrases</h2>
         <div class="button-group">
-            <button id="generateBtn">⚒️ Forge Phrases (with affinity)</button>
+            <button id="generateBtn">⚒️ Forge & Save Phrases</button>
             <button id="copyAllBtn">📋 Copy All</button>
+            <button id="viewSavedBtn">📚 View Saved Phrases</button>
         </div>
         <div id="phraseContainer" class="phrase-grid">
-            <div class="log-entry">Click "Forge Phrases" to assemble from Hermes seeds.</div>
+            <div class="log-entry">Click "Forge & Save Phrases" to create and persist.</div>
         </div>
     </div>
 
@@ -213,8 +214,10 @@
     (function() {
         const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
+        const BATCH_ID = crypto.randomUUID();
 
         let supabase = null;
+        let currentPhrases = [];
 
         // Phrase patterns
         const PATTERNS = [
@@ -225,50 +228,23 @@
             { template: "{noun} {prep} {noun}", type: "npn", minWords: 3 }
         ];
 
-        // Weak phrases to reject
         const WEAK_PHRASES = new Set([
             'the thing', 'things that', 'people are', 'time to', 'way to',
             'make it', 'get it', 'put it', 'set it'
         ]);
 
-        // Preposition pool
         const PREPOSITIONS = ['of', 'in', 'by', 'with', 'through', 'beyond', 'across', 'within', 'without', 'beneath', 'between', 'among'];
 
-        // Semantic affinity scoring
         function semanticAffinity(wordA, wordB) {
             let affinity = 1.0;
-            
-            // Same source bonus (cultural coherence)
-            if (wordA.source && wordB.source && wordA.source === wordB.source) {
-                affinity *= 1.2;
-            }
-            
-            // Same type bonus (compound concepts)
-            if (wordA.type === wordB.type) {
-                affinity *= 1.1;
-            }
-            
-            // Verb + noun bonus (natural action-object)
-            if ((wordA.type === 'verb' && wordB.type === 'noun') || 
-                (wordA.type === 'noun' && wordB.type === 'verb')) {
-                affinity *= 1.15;
-            }
-            
-            // Adjective + noun bonus (descriptor + concept)
-            if ((wordA.type === 'adj' && wordB.type === 'noun') ||
-                (wordA.type === 'noun' && wordB.type === 'adj')) {
-                affinity *= 1.1;
-            }
-            
-            // Alliteration bonus
-            if (wordA.word[0] === wordB.word[0]) {
-                affinity *= 1.05;
-            }
-            
+            if (wordA.source && wordB.source && wordA.source === wordB.source) affinity *= 1.2;
+            if (wordA.type === wordB.type) affinity *= 1.1;
+            if ((wordA.type === 'verb' && wordB.type === 'noun') || (wordA.type === 'noun' && wordB.type === 'verb')) affinity *= 1.15;
+            if ((wordA.type === 'adj' && wordB.type === 'noun') || (wordA.type === 'noun' && wordB.type === 'adj')) affinity *= 1.1;
+            if (wordA.word[0] === wordB.word[0]) affinity *= 1.05;
             return affinity;
         }
 
-        // Decay function (24-hour half-life)
         function applyDecay(score, createdAt) {
             const ageHours = (Date.now() - new Date(createdAt)) / (1000 * 60 * 60);
             const decay = Math.exp(-ageHours / 24);
@@ -281,61 +257,41 @@
                 .select('word_type');
 
             if (error) return;
-
-            const nouns = data.filter(d => d.word_type === 'noun').length;
-            const verbs = data.filter(d => d.word_type === 'verb').length;
-            const adjs = data.filter(d => d.word_type === 'adj').length;
-
-            document.getElementById('nounCount').textContent = nouns;
-            document.getElementById('verbCount').textContent = verbs;
-            document.getElementById('adjCount').textContent = adjs;
+            document.getElementById('nounCount').textContent = data.filter(d => d.word_type === 'noun').length;
+            document.getElementById('verbCount').textContent = data.filter(d => d.word_type === 'verb').length;
+            document.getElementById('adjCount').textContent = data.filter(d => d.word_type === 'adj').length;
         }
 
         async function fetchWeightedWords() {
             const { data, error } = await supabase
                 .from('hermes_entries')
-                .select('body, word_type, trending_score, source, created_at, first_seen_at')
+                .select('id, body, word_type, trending_score, source, created_at')
                 .order('trending_score', { ascending: false })
                 .limit(300);
 
             if (error) {
-                addLog(`Failed to fetch Hermes seeds: ${error.message}`, 'error');
+                addLog(`Failed to fetch seeds: ${error.message}`, 'error');
                 return { nouns: [], verbs: [], adjs: [] };
             }
 
-            const nouns = [];
-            const verbs = [];
-            const adjs = [];
-
+            const nouns = [], verbs = [], adjs = [];
             for (const item of data) {
                 const decayedScore = applyDecay(item.trending_score || 1, item.created_at);
-                const entry = { 
-                    word: item.body, 
-                    score: decayedScore,
-                    source: item.source,
-                    type: item.word_type
-                };
-                
+                const entry = { id: item.id, word: item.body, score: decayedScore, source: item.source, type: item.word_type };
                 if (item.word_type === 'noun') nouns.push(entry);
                 else if (item.word_type === 'verb') verbs.push(entry);
                 else if (item.word_type === 'adj') adjs.push(entry);
             }
-
-            // Sort by score
             nouns.sort((a,b) => b.score - a.score);
             verbs.sort((a,b) => b.score - a.score);
             adjs.sort((a,b) => b.score - a.score);
-
-            addLog(`Fetched ${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives`, 'success');
-            
+            addLog(`Loaded ${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives`, 'success');
             return { nouns, verbs, adjs };
         }
 
         function selectWordWithAffinity(candidates, previousWord = null) {
             if (!candidates.length) return null;
-            
             if (!previousWord) {
-                // First word: just use weighted random
                 const totalWeight = candidates.reduce((sum, i) => sum + i.score, 0);
                 let random = Math.random() * totalWeight;
                 for (const item of candidates) {
@@ -344,63 +300,51 @@
                 }
                 return candidates[0];
             }
-            
-            // Score each candidate based on affinity with previous word
-            const scored = candidates.map(c => ({
-                ...c,
-                affinityScore: c.score * semanticAffinity(c, previousWord)
-            }));
-            
+            const scored = candidates.map(c => ({ ...c, affinityScore: c.score * semanticAffinity(c, previousWord) }));
             scored.sort((a,b) => b.affinityScore - a.affinityScore);
             return scored[0];
         }
 
-        function generatePhrase(pattern, nouns, verbs, adjs) {
+        function generatePhrase(pattern, nouns, verbs, adjs, usedSignalIds = new Set()) {
             const usedEntries = [];
             let lastWord = null;
-            
-            // Handle multiple nouns
             const nounCount = (pattern.template.match(/{noun}/g) || []).length;
             const selectedNouns = [];
-            
             for (let i = 0; i < nounCount; i++) {
                 const nounWord = selectWordWithAffinity(nouns, lastWord);
                 if (nounWord) {
                     selectedNouns.push(nounWord.word);
                     usedEntries.push(nounWord);
+                    if (nounWord.id) usedSignalIds.add(nounWord.id);
                     lastWord = nounWord;
                 } else {
                     selectedNouns.push('resonance');
                 }
             }
-            
             const verbWord = selectWordWithAffinity(verbs, lastWord);
             const verb = verbWord ? verbWord.word : 'emerges';
-            if (verbWord) usedEntries.push(verbWord);
-            
+            if (verbWord) {
+                usedEntries.push(verbWord);
+                if (verbWord.id) usedSignalIds.add(verbWord.id);
+            }
             const adjWord = selectWordWithAffinity(adjs, lastWord);
             const adj = adjWord ? adjWord.word : 'new';
-            if (adjWord) usedEntries.push(adjWord);
-            
+            if (adjWord) {
+                usedEntries.push(adjWord);
+                if (adjWord.id) usedSignalIds.add(adjWord.id);
+            }
             const prep = PREPOSITIONS[Math.floor(Math.random() * PREPOSITIONS.length)];
-            
-            // Build phrase
             let phrase = pattern.template;
             phrase = phrase.replace(/{noun}/g, () => selectedNouns.shift() || 'resonance');
             phrase = phrase.replace('{verb}', verb);
             phrase = phrase.replace('{adj}', adj);
             phrase = phrase.replace('{prep}', prep);
-            
-            // Capitalize
             phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
-            
-            // Calculate affinity score
             let affinityTotal = 1.0;
             for (let i = 0; i < usedEntries.length - 1; i++) {
                 affinityTotal *= semanticAffinity(usedEntries[i], usedEntries[i + 1]);
             }
-            
-            return { phrase, usedEntries, patternType: pattern.type, affinityTotal };
+            return { phrase, usedEntries, patternType: pattern.type, affinityTotal, usedSignalIds: Array.from(usedSignalIds) };
         }
 
         function isWeakPhrase(phrase) {
@@ -412,67 +356,110 @@
 
         function calculatePhraseScore(phrase, usedEntries) {
             let score = 70;
-            
-            for (const entry of usedEntries) {
-                score += entry.score * 0.3;
-            }
-            
+            for (const entry of usedEntries) score += entry.score * 0.3;
             let affinityProduct = 1.0;
-            for (let i = 0; i < usedEntries.length - 1; i++) {
-                affinityProduct *= semanticAffinity(usedEntries[i], usedEntries[i + 1]);
-            }
+            for (let i = 0; i < usedEntries.length - 1; i++) affinityProduct *= semanticAffinity(usedEntries[i], usedEntries[i + 1]);
             score += (affinityProduct - 1) * 50;
-            
             const weakWords = ['thing', 'people', 'time', 'way', 'make', 'get'];
-            for (const w of weakWords) {
-                if (phrase.toLowerCase().includes(w)) score -= 15;
-            }
-            
+            for (const w of weakWords) if (phrase.toLowerCase().includes(w)) score -= 15;
             return Math.min(100, Math.max(0, Math.round(score)));
         }
 
-        async function generatePhrases() {
+        async function savePhrasesToDB(phrases) {
+            let saved = 0;
+            for (const p of phrases) {
+                const expiresAt = new Date();
+                expiresAt.setDate(expiresAt.getDate() + 7);
+                const { error } = await supabase
+                    .from('hephaestus_phrases')
+                    .insert({
+                        phrase: p.phrase,
+                        score: p.score,
+                        affinity_score: p.affinityScore,
+                        pattern_type: p.patternType,
+                        used_signal_ids: p.usedSignalIds || [],
+                        used_words: p.usedWords || [],
+                        batch_id: BATCH_ID,
+                        expires_at: expiresAt.toISOString()
+                    });
+                if (error) {
+                    addLog(`⚠️ Could not save "${p.phrase}": ${error.message}`, 'warning');
+                } else {
+                    saved++;
+                }
+            }
+            return saved;
+        }
+
+        async function generateAndSavePhrases() {
             addLog('🔨 Forging phrases with semantic affinity...', 'info');
-            
             const { nouns, verbs, adjs } = await fetchWeightedWords();
-            
             if (nouns.length < 5 || verbs.length < 3) {
                 addLog('⚠️ Not enough seeds. Run Hermes first.', 'warning');
                 return [];
             }
-
             const candidates = [];
             const usedCombos = new Set();
-
             for (let i = 0; i < 60; i++) {
                 const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
-                const { phrase, usedEntries, patternType, affinityTotal } = generatePhrase(pattern, nouns, verbs, adjs);
-                
+                const usedSignalIds = new Set();
+                const { phrase, usedEntries, patternType, affinityTotal, usedSignalIds: signalIds } = generatePhrase(pattern, nouns, verbs, adjs, usedSignalIds);
                 const comboKey = usedEntries.map(e => e.word).join('_');
                 if (usedCombos.has(comboKey)) continue;
                 usedCombos.add(comboKey);
-                
                 if (isWeakPhrase(phrase)) continue;
-                
                 const score = calculatePhraseScore(phrase, usedEntries);
-                candidates.push({ phrase, score, usedWords: usedEntries.map(e => e.word), patternType, affinityScore: Math.round(affinityTotal * 100) });
+                candidates.push({ 
+                    phrase, 
+                    score, 
+                    affinityScore: Math.round(affinityTotal * 100),
+                    patternType, 
+                    usedWords: usedEntries.map(e => e.word),
+                    usedSignalIds: signalIds
+                });
             }
-
             candidates.sort((a,b) => b.score - a.score);
-            const topPhrases = candidates.slice(0, 10);
-            
-            addLog(`⚒️ Forged ${topPhrases.length} quality phrases`, 'success');
+            const topPhrases = candidates.slice(0, 15);
+            addLog(`⚒️ Forged ${topPhrases.length} phrases, saving to database...`, 'success');
+            const saved = await savePhrasesToDB(topPhrases);
+            addLog(`💾 Saved ${saved} phrases to hephaestus_phrases (batch: ${BATCH_ID.slice(0,8)})`, 'success');
+            currentPhrases = topPhrases;
+            displayPhrases(topPhrases);
             return topPhrases;
+        }
+
+        async function loadSavedPhrases() {
+            addLog('📚 Loading saved phrases from database...', 'info');
+            const { data, error } = await supabase
+                .from('hephaestus_phrases')
+                .select('phrase, score, affinity_score, pattern_type, created_at')
+                .order('score', { ascending: false })
+                .limit(30);
+            if (error) {
+                addLog(`Failed to load saved phrases: ${error.message}`, 'error');
+                return;
+            }
+            if (!data || data.length === 0) {
+                addLog('No saved phrases found. Forge some first.', 'warning');
+                return;
+            }
+            currentPhrases = data.map(p => ({
+                phrase: p.phrase,
+                score: p.score,
+                affinityScore: p.affinity_score,
+                patternType: p.pattern_type,
+                saved: true
+            }));
+            displayPhrases(currentPhrases);
+            addLog(`📖 Loaded ${data.length} saved phrases`, 'success');
         }
 
         function displayPhrases(phrases) {
             const container = document.getElementById('phraseContainer');
-            
             if (!phrases.length) {
-                container.innerHTML = '<div class="log-entry">No phrases forged. Try again with more seeds.</div>';
+                container.innerHTML = '<div class="log-entry">No phrases yet. Forge some.</div>';
                 return;
             }
-
             container.innerHTML = phrases.map(p => `
                 <div class="phrase-card" data-phrase="${escapeHtml(p.phrase)}">
                     <div class="phrase-text">${escapeHtml(p.phrase)}</div>
@@ -501,8 +488,7 @@
         };
 
         async function copyAllPhrases() {
-            const cards = document.querySelectorAll('.phrase-card');
-            const phrases = Array.from(cards).map(card => card.dataset.phrase);
+            const phrases = currentPhrases.map(p => p.phrase);
             if (phrases.length) {
                 navigator.clipboard.writeText(phrases.join('\n\n'));
                 addLog(`📋 Copied all ${phrases.length} phrases to clipboard`, 'success');
@@ -513,24 +499,17 @@
             return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
         }
 
-        async function onGenerate() {
-            const phrases = await generatePhrases();
-            displayPhrases(phrases);
-        }
-
         async function init() {
             if (!window.supabase) {
                 console.error('Supabase not loaded');
                 return;
             }
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            
             await loadStats();
-            
-            document.getElementById('generateBtn').addEventListener('click', onGenerate);
+            document.getElementById('generateBtn').addEventListener('click', generateAndSavePhrases);
             document.getElementById('copyAllBtn').addEventListener('click', copyAllPhrases);
-            
-            addLog('🔥 Hephaestus ready. Forging coherent phrases from Hermes seeds.', 'success');
+            document.getElementById('viewSavedBtn').addEventListener('click', loadSavedPhrases);
+            addLog('🔥 Hephaestus ready. Forging and saving to hephaestus_phrases.', 'success');
         }
 
         init();

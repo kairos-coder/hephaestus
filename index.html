@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hephaestus · The Assembler</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0c12;
+            font-family: 'SF Mono', 'Courier New', monospace;
+            padding: 2rem;
+            color: #d4e0ed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #e07040;
+        }
+
+        .sub {
+            color: #6a7a8a;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #1e2535;
+            padding-bottom: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .panel {
+            background: #0b0e16;
+            border: 1px solid #1e2535;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .panel h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: #e07040;
+            border-left: 2px solid #e07040;
+            padding-left: 0.5rem;
+        }
+
+        .phrase-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .phrase-card {
+            background: #0f141e;
+            border: 1px solid #1e2535;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+
+        .phrase-card:hover {
+            background: #1a1f2a;
+            border-color: #e07040;
+        }
+
+        .phrase-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #e0e2ed;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .phrase-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.65rem;
+            color: #6a7a8a;
+        }
+
+        .phrase-score {
+            color: #e07040;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #1e2535;
+            border: none;
+            color: #d4e0ed;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        button:hover {
+            background: #e07040;
+            color: #0a0c12;
+        }
+
+        .copy-btn {
+            background: none;
+            border: 1px solid #1e2535;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.6rem;
+        }
+
+        .copy-btn:hover {
+            background: #e07040;
+            border-color: #e07040;
+        }
+
+        .log-area {
+            background: #060810;
+            border: 1px solid #1e2535;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #1a1f2a;
+            color: #6a7a8a;
+        }
+
+        .log-entry.success {
+            color: #6b8e23;
+        }
+
+        .log-entry.warning {
+            color: #e07040;
+        }
+
+        .log-entry.error {
+            color: #c0392b;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: #0f141e;
+            border: 1px solid #1e2535;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #e07040;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            color: #6a7a8a;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="container">
+    <h1>🔥 Hephaestus · The Assembler</h1>
+    <div class="sub">Forging coherent phrases from Hermes seeds · Semantic affinity · Time-decayed</div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-number" id="nounCount">—</div><div class="stat-label">Nouns</div></div>
+        <div class="stat-card"><div class="stat-number" id="verbCount">—</div><div class="stat-label">Verbs</div></div>
+        <div class="stat-card"><div class="stat-number" id="adjCount">—</div><div class="stat-label">Adjectives</div></div>
+    </div>
+
+    <div class="panel">
+        <h2>🔨 Forged Phrases</h2>
+        <div class="button-group">
+            <button id="generateBtn">⚒️ Forge Phrases (with affinity)</button>
+            <button id="copyAllBtn">📋 Copy All</button>
+        </div>
+        <div id="phraseContainer" class="phrase-grid">
+            <div class="log-entry">Click "Forge Phrases" to assemble from Hermes seeds.</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>📋 Log</h2>
+        <div id="logArea" class="log-area">
+            <div class="log-entry">Ready. Hephaestus awaits Hermes seeds.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
+
+        let supabase = null;
+
+        // Phrase patterns
+        const PATTERNS = [
+            { template: "{noun} {verb}", type: "nv", minWords: 2 },
+            { template: "{adj} {noun}", type: "adjn", minWords: 2 },
+            { template: "{noun} {verb} {noun}", type: "nvn", minWords: 3 },
+            { template: "{verb} {noun}", type: "vn", minWords: 2 },
+            { template: "{noun} {prep} {noun}", type: "npn", minWords: 3 }
+        ];
+
+        // Weak phrases to reject
+        const WEAK_PHRASES = new Set([
+            'the thing', 'things that', 'people are', 'time to', 'way to',
+            'make it', 'get it', 'put it', 'set it'
+        ]);
+
+        // Preposition pool
+        const PREPOSITIONS = ['of', 'in', 'by', 'with', 'through', 'beyond', 'across', 'within', 'without', 'beneath', 'between', 'among'];
+
+        // Semantic affinity scoring
+        function semanticAffinity(wordA, wordB) {
+            let affinity = 1.0;
+            
+            // Same source bonus (cultural coherence)
+            if (wordA.source && wordB.source && wordA.source === wordB.source) {
+                affinity *= 1.2;
+            }
+            
+            // Same type bonus (compound concepts)
+            if (wordA.type === wordB.type) {
+                affinity *= 1.1;
+            }
+            
+            // Verb + noun bonus (natural action-object)
+            if ((wordA.type === 'verb' && wordB.type === 'noun') || 
+                (wordA.type === 'noun' && wordB.type === 'verb')) {
+                affinity *= 1.15;
+            }
+            
+            // Adjective + noun bonus (descriptor + concept)
+            if ((wordA.type === 'adj' && wordB.type === 'noun') ||
+                (wordA.type === 'noun' && wordB.type === 'adj')) {
+                affinity *= 1.1;
+            }
+            
+            // Alliteration bonus
+            if (wordA.word[0] === wordB.word[0]) {
+                affinity *= 1.05;
+            }
+            
+            return affinity;
+        }
+
+        // Decay function (24-hour half-life)
+        function applyDecay(score, createdAt) {
+            const ageHours = (Date.now() - new Date(createdAt)) / (1000 * 60 * 60);
+            const decay = Math.exp(-ageHours / 24);
+            return score * decay;
+        }
+
+        async function loadStats() {
+            const { data, error } = await supabase
+                .from('hermes_entries')
+                .select('word_type');
+
+            if (error) return;
+
+            const nouns = data.filter(d => d.word_type === 'noun').length;
+            const verbs = data.filter(d => d.word_type === 'verb').length;
+            const adjs = data.filter(d => d.word_type === 'adj').length;
+
+            document.getElementById('nounCount').textContent = nouns;
+            document.getElementById('verbCount').textContent = verbs;
+            document.getElementById('adjCount').textContent = adjs;
+        }
+
+        async function fetchWeightedWords() {
+            const { data, error } = await supabase
+                .from('hermes_entries')
+                .select('body, word_type, trending_score, source, created_at, first_seen_at')
+                .order('trending_score', { ascending: false })
+                .limit(300);
+
+            if (error) {
+                addLog(`Failed to fetch Hermes seeds: ${error.message}`, 'error');
+                return { nouns: [], verbs: [], adjs: [] };
+            }
+
+            const nouns = [];
+            const verbs = [];
+            const adjs = [];
+
+            for (const item of data) {
+                const decayedScore = applyDecay(item.trending_score || 1, item.created_at);
+                const entry = { 
+                    word: item.body, 
+                    score: decayedScore,
+                    source: item.source,
+                    type: item.word_type
+                };
+                
+                if (item.word_type === 'noun') nouns.push(entry);
+                else if (item.word_type === 'verb') verbs.push(entry);
+                else if (item.word_type === 'adj') adjs.push(entry);
+            }
+
+            // Sort by score
+            nouns.sort((a,b) => b.score - a.score);
+            verbs.sort((a,b) => b.score - a.score);
+            adjs.sort((a,b) => b.score - a.score);
+
+            addLog(`Fetched ${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives`, 'success');
+            
+            return { nouns, verbs, adjs };
+        }
+
+        function selectWordWithAffinity(candidates, previousWord = null) {
+            if (!candidates.length) return null;
+            
+            if (!previousWord) {
+                // First word: just use weighted random
+                const totalWeight = candidates.reduce((sum, i) => sum + i.score, 0);
+                let random = Math.random() * totalWeight;
+                for (const item of candidates) {
+                    if (random < item.score) return item;
+                    random -= item.score;
+                }
+                return candidates[0];
+            }
+            
+            // Score each candidate based on affinity with previous word
+            const scored = candidates.map(c => ({
+                ...c,
+                affinityScore: c.score * semanticAffinity(c, previousWord)
+            }));
+            
+            scored.sort((a,b) => b.affinityScore - a.affinityScore);
+            return scored[0];
+        }
+
+        function generatePhrase(pattern, nouns, verbs, adjs) {
+            const usedEntries = [];
+            let lastWord = null;
+            
+            // Handle multiple nouns
+            const nounCount = (pattern.template.match(/{noun}/g) || []).length;
+            const selectedNouns = [];
+            
+            for (let i = 0; i < nounCount; i++) {
+                const nounWord = selectWordWithAffinity(nouns, lastWord);
+                if (nounWord) {
+                    selectedNouns.push(nounWord.word);
+                    usedEntries.push(nounWord);
+                    lastWord = nounWord;
+                } else {
+                    selectedNouns.push('resonance');
+                }
+            }
+            
+            const verbWord = selectWordWithAffinity(verbs, lastWord);
+            const verb = verbWord ? verbWord.word : 'emerges';
+            if (verbWord) usedEntries.push(verbWord);
+            
+            const adjWord = selectWordWithAffinity(adjs, lastWord);
+            const adj = adjWord ? adjWord.word : 'new';
+            if (adjWord) usedEntries.push(adjWord);
+            
+            const prep = PREPOSITIONS[Math.floor(Math.random() * PREPOSITIONS.length)];
+            
+            // Build phrase
+            let phrase = pattern.template;
+            phrase = phrase.replace(/{noun}/g, () => selectedNouns.shift() || 'resonance');
+            phrase = phrase.replace('{verb}', verb);
+            phrase = phrase.replace('{adj}', adj);
+            phrase = phrase.replace('{prep}', prep);
+            
+            // Capitalize
+            phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
+            
+            // Calculate affinity score
+            let affinityTotal = 1.0;
+            for (let i = 0; i < usedEntries.length - 1; i++) {
+                affinityTotal *= semanticAffinity(usedEntries[i], usedEntries[i + 1]);
+            }
+            
+            return { phrase, usedEntries, patternType: pattern.type, affinityTotal };
+        }
+
+        function isWeakPhrase(phrase) {
+            const lower = phrase.toLowerCase();
+            if (WEAK_PHRASES.has(lower)) return true;
+            if (lower.split(' ').length < 2) return true;
+            return false;
+        }
+
+        function calculatePhraseScore(phrase, usedEntries) {
+            let score = 70;
+            
+            for (const entry of usedEntries) {
+                score += entry.score * 0.3;
+            }
+            
+            let affinityProduct = 1.0;
+            for (let i = 0; i < usedEntries.length - 1; i++) {
+                affinityProduct *= semanticAffinity(usedEntries[i], usedEntries[i + 1]);
+            }
+            score += (affinityProduct - 1) * 50;
+            
+            const weakWords = ['thing', 'people', 'time', 'way', 'make', 'get'];
+            for (const w of weakWords) {
+                if (phrase.toLowerCase().includes(w)) score -= 15;
+            }
+            
+            return Math.min(100, Math.max(0, Math.round(score)));
+        }
+
+        async function generatePhrases() {
+            addLog('🔨 Forging phrases with semantic affinity...', 'info');
+            
+            const { nouns, verbs, adjs } = await fetchWeightedWords();
+            
+            if (nouns.length < 5 || verbs.length < 3) {
+                addLog('⚠️ Not enough seeds. Run Hermes first.', 'warning');
+                return [];
+            }
+
+            const candidates = [];
+            const usedCombos = new Set();
+
+            for (let i = 0; i < 60; i++) {
+                const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+                const { phrase, usedEntries, patternType, affinityTotal } = generatePhrase(pattern, nouns, verbs, adjs);
+                
+                const comboKey = usedEntries.map(e => e.word).join('_');
+                if (usedCombos.has(comboKey)) continue;
+                usedCombos.add(comboKey);
+                
+                if (isWeakPhrase(phrase)) continue;
+                
+                const score = calculatePhraseScore(phrase, usedEntries);
+                candidates.push({ phrase, score, usedWords: usedEntries.map(e => e.word), patternType, affinityScore: Math.round(affinityTotal * 100) });
+            }
+
+            candidates.sort((a,b) => b.score - a.score);
+            const topPhrases = candidates.slice(0, 10);
+            
+            addLog(`⚒️ Forged ${topPhrases.length} quality phrases`, 'success');
+            return topPhrases;
+        }
+
+        function displayPhrases(phrases) {
+            const container = document.getElementById('phraseContainer');
+            
+            if (!phrases.length) {
+                container.innerHTML = '<div class="log-entry">No phrases forged. Try again with more seeds.</div>';
+                return;
+            }
+
+            container.innerHTML = phrases.map(p => `
+                <div class="phrase-card" data-phrase="${escapeHtml(p.phrase)}">
+                    <div class="phrase-text">${escapeHtml(p.phrase)}</div>
+                    <div class="phrase-meta">
+                        <span class="phrase-score">✨ ${p.score}%</span>
+                        <span>affinity: ${p.affinityScore}%</span>
+                        <span>pattern: ${p.patternType}</span>
+                        <button class="copy-btn" onclick="copyPhrase('${escapeHtml(p.phrase).replace(/'/g, "\\'")}')">📋 Copy</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addLog(message, type = 'info') {
+            const logDiv = document.getElementById('logArea');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        window.copyPhrase = function(phrase) {
+            navigator.clipboard.writeText(phrase);
+            addLog(`📋 Copied "${phrase}" to clipboard`, 'success');
+        };
+
+        async function copyAllPhrases() {
+            const cards = document.querySelectorAll('.phrase-card');
+            const phrases = Array.from(cards).map(card => card.dataset.phrase);
+            if (phrases.length) {
+                navigator.clipboard.writeText(phrases.join('\n\n'));
+                addLog(`📋 Copied all ${phrases.length} phrases to clipboard`, 'success');
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        }
+
+        async function onGenerate() {
+            const phrases = await generatePhrases();
+            displayPhrases(phrases);
+        }
+
+        async function init() {
+            if (!window.supabase) {
+                console.error('Supabase not loaded');
+                return;
+            }
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            await loadStats();
+            
+            document.getElementById('generateBtn').addEventListener('click', onGenerate);
+            document.getElementById('copyAllBtn').addEventListener('click', copyAllPhrases);
+            
+            addLog('🔥 Hephaestus ready. Forging coherent phrases from Hermes seeds.', 'success');
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>

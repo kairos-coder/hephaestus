@@ -11,7 +11,7 @@
         h1 { color: #e07040; margin-bottom: 0.5rem; }
         .sub { color: #6a7a8a; margin-bottom: 2rem; }
         .panel { background: #0b0e16; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 2rem; }
-        button { background: #1e2535; border: none; color: #d4e0ed; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-right: 0.5rem; }
+        button { background: #1e2535; border: none; color: #d4e0ed; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-right: 0.5rem; margin-bottom: 0.5rem; }
         button:hover { background: #e07040; }
         .phrase-card { background: #0f141e; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 0.8rem; margin-bottom: 0.5rem; cursor: pointer; }
         .phrase-card:hover { background: #1a1f2a; border-color: #e07040; }
@@ -21,6 +21,7 @@
         .log-entry { padding: 0.2rem 0; border-bottom: 1px solid #1a1f2a; color: #6a7a8a; }
         .log-entry.success { color: #6b8e23; }
         .stats { font-size: 0.7rem; color: #6a7a8a; margin-bottom: 1rem; }
+        .word-count { font-weight: bold; color: #e07040; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -30,15 +31,15 @@
     <div class="sub">Generate phrases from Hermes words → saves to hephaestus_phrases</div>
 
     <div class="panel">
+        <button id="checkBtn">🔍 Check Words in Hermes</button>
         <button id="forgeBtn">⚒️ Forge Phrases</button>
         <button id="clearBtn">🗑️ Clear All Phrases</button>
-        <button id="checkBtn">🔍 Check Words</button>
         <div id="stats" class="stats" style="margin-top: 1rem;"></div>
         <div id="phraseContainer" style="margin-top: 1rem;"></div>
     </div>
 
     <div class="panel">
-        <div id="logArea" class="log-area"><div class="log-entry">Ready. Click 'Check Words' first to see what's in Hermes.</div></div>
+        <div id="logArea" class="log-area"><div class="log-entry">Ready. Click 'Check Words' first.</div></div>
     </div>
 </div>
 
@@ -48,6 +49,7 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
     
     let db = null;
+    let currentWordCount = 0;
 
     const PATTERNS = [
         { template: "{noun} {verb}" },
@@ -66,36 +68,50 @@
     }
 
     async function checkWords() {
-        const { data, error } = await db
-            .from('hermes_entries')
-            .select('body, word_type, trending_score')
-            .limit(20);
-
-        if (error) {
-            addLog(`Error: ${error.message}`, 'error');
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            addLog('⚠️ Hermes table is empty! Run Hermes scraper first.', 'warning');
-            document.getElementById('stats').innerHTML = '❌ No words found. Run Hermes first.';
-            return;
-        }
-
-        const nouns = data.filter(w => w.word_type === 'noun').length;
-        const verbs = data.filter(w => w.word_type === 'verb').length;
-        const adjs = data.filter(w => w.word_type === 'adj').length;
+        addLog('🔍 Checking Hermes table...', 'info');
         
-        document.getElementById('stats').innerHTML = `📊 Hermes has ${data.length} words (${nouns} nouns, ${verbs} verbs, ${adjs} adjectives)`;
-        addLog(`✅ Found ${data.length} words in Hermes. Sample: ${data.slice(0,3).map(w => w.body).join(', ')}`, 'success');
+        try {
+            // Get total count
+            const { count, error: countError } = await db
+                .from('hermes_entries')
+                .select('*', { count: 'exact', head: true });
+            
+            if (countError) {
+                addLog(`Error: ${countError.message}`, 'error');
+                return;
+            }
+            
+            currentWordCount = count || 0;
+            
+            if (currentWordCount === 0) {
+                addLog('❌ Hermes table is EMPTY. Run Hermes scraper first.', 'warning');
+                document.getElementById('stats').innerHTML = '❌ No words in Hermes. Run Hermes scraper.';
+                return;
+            }
+            
+            // Get sample words
+            const { data: samples } = await db
+                .from('hermes_entries')
+                .select('body, word_type, trending_score')
+                .limit(10);
+            
+            const nouns = samples?.filter(w => w.word_type === 'noun').length || 0;
+            const verbs = samples?.filter(w => w.word_type === 'verb').length || 0;
+            const adjs = samples?.filter(w => w.word_type === 'adj').length || 0;
+            
+            document.getElementById('stats').innerHTML = `✅ Hermes has <span class="word-count">${currentWordCount}</span> words (sample: nouns ${nouns}, verbs ${verbs}, adjectives ${adjs})<br>Example: ${samples?.slice(0,3).map(w => w.body).join(', ')}`;
+            addLog(`✅ Found ${currentWordCount} words in Hermes`, 'success');
+            
+        } catch (err) {
+            addLog(`Error: ${err.message}`, 'error');
+        }
     }
 
-    async function loadWords() {
+    async function loadAllWords() {
         const { data, error } = await db
             .from('hermes_entries')
             .select('body, word_type, trending_score')
-            .gt('trending_score', 30)
-            .limit(100);
+            .limit(200);
 
         if (error) {
             addLog(`Error loading words: ${error.message}`, 'error');
@@ -106,20 +122,24 @@
         const verbs = data.filter(w => w.word_type === 'verb');
         const adjs = data.filter(w => w.word_type === 'adj');
 
-        return { nouns, verbs, adjs };
+        return { nouns, verbs, adjs, total: data.length };
     }
 
     async function forgePhrases() {
         addLog('🔥 Forging phrases...', 'info');
         
-        // Check if we have words first
-        const { data: wordCheck } = await db.from('hermes_entries').select('id', { head: true, count: 'exact' });
-        if (!wordCheck || wordCheck.length === 0) {
-            addLog('❌ Hermes is empty. Run Hermes scraper first.', 'error');
-            return;
+        // Double-check Hermes has words
+        if (currentWordCount === 0) {
+            await checkWords();
+            if (currentWordCount === 0) {
+                addLog('❌ Cannot forge: Hermes is empty.', 'error');
+                return;
+            }
         }
         
-        const { nouns, verbs, adjs } = await loadWords();
+        const { nouns, verbs, adjs, total } = await loadAllWords();
+        
+        addLog(`📊 Loaded ${total} words (${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives)`, 'info');
         
         if (nouns.length < 2) {
             addLog(`Not enough nouns (need at least 2, have ${nouns.length}). Add more words to Hermes.`, 'warning');
@@ -127,7 +147,8 @@
         }
 
         // Clear old phrases
-        await db.from('hephaestus_phrases').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        const { error: deleteError } = await db.from('hephaestus_phrases').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        if (deleteError) addLog(`Clear warning: ${deleteError.message}`, 'warning');
         
         const phrases = [];
         const used = new Set();
@@ -167,37 +188,39 @@
                 expires_at: expiresAt.toISOString()
             });
             if (!error) saved++;
+            else if (!error.message?.includes('unique')) addLog(`Insert warning: ${error.message}`, 'warning');
         }
         
         addLog(`✅ Forged and saved ${saved} phrases to hephaestus_phrases`, 'success');
-        displayPhrases(phrases);
+        await displayPhrases();
     }
 
-    async function displayPhrases(phrases) {
+    async function displayPhrases() {
         const container = document.getElementById('phraseContainer');
-        if (!phrases || !phrases.length) {
-            // Try to load existing phrases
-            const { data } = await db.from('hephaestus_phrases').select('phrase, score').order('created_at', { ascending: false }).limit(15);
-            if (data && data.length) {
-                container.innerHTML = data.map(p => `
-                    <div class="phrase-card" onclick="navigator.clipboard.writeText('${escapeHtml(p.phrase)}')">
-                        <div class="phrase-text">${escapeHtml(p.phrase)}</div>
-                        <div class="phrase-score">✨ ${p.score}%</div>
-                    </div>
-                `).join('');
-                addLog(`📖 Loaded ${data.length} existing phrases from database`, 'info');
-            } else {
-                container.innerHTML = '<div class="log-entry">No phrases yet. Click "Forge Phrases".</div>';
-            }
+        const { data, error } = await db
+            .from('hephaestus_phrases')
+            .select('phrase, score')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) {
+            container.innerHTML = `<div class="log-entry">Error: ${error.message}</div>`;
             return;
         }
-        
-        container.innerHTML = phrases.map(p => `
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="log-entry">No phrases yet. Click "Forge Phrases".</div>';
+            return;
+        }
+
+        container.innerHTML = data.map(p => `
             <div class="phrase-card" onclick="navigator.clipboard.writeText('${escapeHtml(p.phrase)}')">
                 <div class="phrase-text">${escapeHtml(p.phrase)}</div>
                 <div class="phrase-score">✨ ${p.score}%</div>
             </div>
         `).join('');
+        
+        addLog(`📖 Displaying ${data.length} phrases from database`, 'info');
     }
 
     async function clearPhrases() {
@@ -210,9 +233,9 @@
         return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
     }
 
+    document.getElementById('checkBtn').addEventListener('click', checkWords);
     document.getElementById('forgeBtn').addEventListener('click', forgePhrases);
     document.getElementById('clearBtn').addEventListener('click', clearPhrases);
-    document.getElementById('checkBtn').addEventListener('click', checkWords);
 
     async function init() {
         if (!window.supabase) {
@@ -222,12 +245,16 @@
         db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         // Check if hephaestus_phrases table exists
-        const { error: tableCheck } = await db.from('hephaestus_phrases').select('id').limit(1);
-        if (tableCheck && tableCheck.message.includes('does not exist')) {
-            addLog('⚠️ hephaestus_phrases table missing. Create it in Supabase SQL first.', 'error');
-        } else {
-            addLog('🔥 Hephaestus ready. Click "Check Words" to see Hermes data.', 'success');
-            await displayPhrases();
+        try {
+            const { error } = await db.from('hephaestus_phrases').select('id').limit(1);
+            if (error && error.message.includes('does not exist')) {
+                addLog('⚠️ hephaestus_phrases table missing. Create it in Supabase SQL first.', 'error');
+            } else {
+                addLog('🔥 Hephaestus ready. Click "Check Words" to see Hermes data.', 'success');
+                await displayPhrases();
+            }
+        } catch(e) {
+            addLog(`Init error: ${e.message}`, 'error');
         }
     }
     

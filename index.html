@@ -42,121 +42,129 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
-    let supabase;
-
-    const PATTERNS = [
-        { template: "{noun} {verb}", type: "nv" },
-        { template: "{adj} {noun}", type: "adjn" },
-        { template: "{noun} of {noun}", type: "non" },
-        { template: "{noun} {verb} {noun}", type: "nvn" },
-        { template: "{verb} the {noun}", type: "vtn" },
-        { template: "The {adj} {noun}", type: "theadjn" }
-    ];
-
-    function addLog(msg, type = 'info') {
-        const log = document.getElementById('logArea');
-        const entry = document.createElement('div');
-        entry.className = `log-entry ${type}`;
-        entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-        log.appendChild(entry);
-        entry.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    async function loadWords() {
-        const { data, error } = await supabase
-            .from('hermes_entries')
-            .select('body, word_type, trending_score')
-            .eq('trending_score', 73)
-            .or('body.in.(claude,agent,openai,codex,source,skill,html,code,prompts,principles,prototype,agents,coding)');
-            // .gt('trending_score', 40);
-
-        if (error) {
-            addLog(`Error loading words: ${error.message}`, 'error');
-            return { nouns: [], verbs: [], adjs: [] };
-        }
-
-        const nouns = data.filter(w => w.word_type === 'noun');
-        const verbs = data.filter(w => w.word_type === 'verb');
-        const adjs = data.filter(w => w.word_type === 'adj');
-
-        document.getElementById('stats').innerHTML = `
-            <span class="stat-badge">📚 Nouns: ${nouns.length}</span>
-            <span class="stat-badge">⚡ Verbs: ${verbs.length}</span>
-            <span class="stat-badge">🎨 Adjectives: ${adjs.length}</span>
-        `;
-
-        return { nouns, verbs, adjs };
-    }
-
-    async function forgePhrases() {
-        addLog('🔥 Forging phrases...', 'info');
+    (function() {
+        const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
         
-        const { nouns, verbs, adjs } = await loadWords();
+        let supabase = null;
         
-        if (nouns.length < 2) {
-            addLog('Not enough nouns. Run Hermes first.', 'warning');
-            return;
+        const PATTERNS = [
+            { template: "{noun} {verb}", type: "nv" },
+            { template: "{adj} {noun}", type: "adjn" },
+            { template: "{noun} of {noun}", type: "non" },
+            { template: "{noun} {verb} {noun}", type: "nvn" },
+            { template: "{verb} the {noun}", type: "vtn" },
+            { template: "The {adj} {noun}", type: "theadjn" }
+        ];
+
+        function addLog(msg, type = 'info') {
+            const logDiv = document.getElementById('logArea');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logDiv.appendChild(entry);
+            entry.scrollIntoView({ behavior: 'smooth' });
         }
 
-        const phrases = [];
-        const usedCombos = new Set();
+        async function loadWords() {
+            const { data, error } = await supabase
+                .from('hermes_entries')
+                .select('body, word_type, trending_score')
+                .gt('trending_score', 40)
+                .limit(100);
 
-        for (let i = 0; i < 15; i++) {
-            const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
-            
-            const noun1 = nouns[Math.floor(Math.random() * nouns.length)];
-            const noun2 = nouns.length > 1 ? nouns[Math.floor(Math.random() * nouns.length)] : noun1;
-            const verb = verbs.length ? verbs[Math.floor(Math.random() * verbs.length)] : nouns[0];
-            const adj = adjs.length ? adjs[Math.floor(Math.random() * adjs.length)] : nouns[0];
-            
-            let phrase = pattern.template;
-            phrase = phrase.replace('{noun}', noun1.body);
-            phrase = phrase.replace(/{noun}/g, (match, offset) => {
-                return offset === phrase.lastIndexOf('{noun}') ? noun2.body : noun1.body;
-            });
-            phrase = phrase.replace('{verb}', verb.body);
-            phrase = phrase.replace('{adj}', adj.body);
-            phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
-            
-            const comboKey = `${noun1.body}_${verb.body}_${noun2.body}`;
-            if (usedCombos.has(comboKey)) continue;
-            usedCombos.add(comboKey);
-            
-            const score = Math.min(100, Math.round((noun1.trending_score + verb.trending_score + noun2.trending_score) / 3));
-            phrases.push({ phrase, score });
+            if (error) {
+                addLog(`Error loading words: ${error.message}`, 'error');
+                return { nouns: [], verbs: [], adjs: [] };
+            }
+
+            const nouns = data.filter(w => w.word_type === 'noun');
+            const verbs = data.filter(w => w.word_type === 'verb');
+            const adjs = data.filter(w => w.word_type === 'adj');
+
+            document.getElementById('stats').innerHTML = `
+                <span class="stat-badge">📚 Nouns: ${nouns.length}</span>
+                <span class="stat-badge">⚡ Verbs: ${verbs.length}</span>
+                <span class="stat-badge">🎨 Adjectives: ${adjs.length}</span>
+                <span class="stat-badge">📊 Total words: ${data.length}</span>
+            `;
+
+            return { nouns, verbs, adjs };
         }
 
-        displayPhrases(phrases);
-        addLog(`✨ Forged ${phrases.length} phrases`, 'success');
-    }
+        async function forgePhrases() {
+            addLog('🔥 Forging phrases...', 'info');
+            
+            const { nouns, verbs, adjs } = await loadWords();
+            
+            if (nouns.length < 2) {
+                addLog('Not enough nouns (need at least 2). Run Hermes first.', 'warning');
+                return;
+            }
 
-    function displayPhrases(phrases) {
-        const container = document.getElementById('phraseContainer');
-        if (!phrases.length) {
-            container.innerHTML = '<div class="log-entry">No phrases generated.</div>';
-            return;
+            const phrases = [];
+            const usedCombos = new Set();
+
+            for (let i = 0; i < 20; i++) {
+                const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+                
+                const noun1 = nouns[Math.floor(Math.random() * nouns.length)];
+                const noun2 = nouns.length > 1 ? nouns[Math.floor(Math.random() * nouns.length)] : noun1;
+                const verb = verbs.length ? verbs[Math.floor(Math.random() * verbs.length)] : noun1;
+                const adj = adjs.length ? adjs[Math.floor(Math.random() * adjs.length)] : noun1;
+                
+                let phrase = pattern.template;
+                phrase = phrase.replace(/{noun}/g, (match, offset) => {
+                    return offset === phrase.lastIndexOf('{noun}') ? noun2.body : noun1.body;
+                });
+                phrase = phrase.replace('{verb}', verb.body);
+                phrase = phrase.replace('{adj}', adj.body);
+                phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
+                
+                const comboKey = `${noun1.body}_${verb.body}_${noun2.body}`;
+                if (usedCombos.has(comboKey)) continue;
+                usedCombos.add(comboKey);
+                
+                const score = Math.min(100, Math.round((noun1.trending_score + verb.trending_score + noun2.trending_score) / 3));
+                phrases.push({ phrase, score });
+            }
+
+            displayPhrases(phrases);
+            addLog(`✨ Forged ${phrases.length} unique phrases`, 'success');
         }
-        container.innerHTML = phrases.map(p => `
-            <div class="phrase-card">
-                <div class="phrase-text">${escapeHtml(p.phrase)}</div>
-                <div class="phrase-score">✨ ${p.score}%</div>
-            </div>
-        `).join('');
-    }
 
-    function escapeHtml(str) { return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+        function displayPhrases(phrases) {
+            const container = document.getElementById('phraseContainer');
+            if (!phrases.length) {
+                container.innerHTML = '<div class="log-entry">No phrases generated.</div>';
+                return;
+            }
+            container.innerHTML = phrases.map(p => `
+                <div class="phrase-card">
+                    <div class="phrase-text">${escapeHtml(p.phrase)}</div>
+                    <div class="phrase-score">✨ ${p.score}%</div>
+                </div>
+            `).join('');
+        }
 
-    document.getElementById('forgeBtn').addEventListener('click', forgePhrases);
+        function escapeHtml(str) { 
+            return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); 
+        }
 
-    async function init() {
-        if (!window.supabase) return;
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        addLog('🔥 Hephaestus ready. Forging phrases from quality seeds.', 'success');
-        await loadWords();
-    }
-    init();
+        document.getElementById('forgeBtn').addEventListener('click', forgePhrases);
+
+        async function init() {
+            if (!window.supabase) {
+                addLog('Supabase not loaded', 'error');
+                return;
+            }
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            addLog('🔥 Hephaestus ready. Forging phrases from quality seeds.', 'success');
+            await loadWords();
+        }
+        
+        init();
+    })();
 </script>
 </body>
 </html>

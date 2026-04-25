@@ -7,164 +7,232 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #0a0c12; font-family: monospace; padding: 2rem; color: #d4e0ed; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        .container { max-width: 800px; margin: 0 auto; }
         h1 { color: #e07040; margin-bottom: 0.5rem; }
-        .sub { color: #6a7a8a; margin-bottom: 2rem; border-bottom: 1px solid #1e2535; padding-bottom: 0.5rem; }
+        .sub { color: #6a7a8a; margin-bottom: 2rem; }
         .panel { background: #0b0e16; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 2rem; }
-        button { background: #1e2535; border: none; color: #d4e0ed; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        button { background: #1e2535; border: none; color: #d4e0ed; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-right: 0.5rem; }
         button:hover { background: #e07040; }
-        .phrase-card { background: #0f141e; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; }
-        .phrase-text { font-size: 1rem; margin-bottom: 0.5rem; color: #e0e2ed; }
-        .phrase-score { color: #e07040; font-size: 0.7rem; }
-        .log-area { background: #060810; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1rem; max-height: 200px; overflow-y: auto; font-size: 0.75rem; }
-        .log-entry { padding: 0.25rem 0; border-bottom: 1px solid #1a1f2a; color: #6a7a8a; }
+        .phrase-card { background: #0f141e; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 0.8rem; margin-bottom: 0.5rem; cursor: pointer; }
+        .phrase-card:hover { background: #1a1f2a; border-color: #e07040; }
+        .phrase-text { font-size: 0.9rem; }
+        .phrase-score { color: #e07040; font-size: 0.65rem; margin-top: 0.2rem; }
+        .log-area { background: #060810; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1rem; max-height: 250px; overflow-y: auto; font-size: 0.75rem; }
+        .log-entry { padding: 0.2rem 0; border-bottom: 1px solid #1a1f2a; color: #6a7a8a; }
         .log-entry.success { color: #6b8e23; }
-        .stats { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
-        .stat-badge { background: #1a1f2a; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; }
+        .stats { font-size: 0.7rem; color: #6a7a8a; margin-bottom: 1rem; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="container">
     <h1>🔥 Hephaestus · Phrase Forge</h1>
-    <div class="sub">Generating meaningful phrases from quality words</div>
+    <div class="sub">Generate phrases from Hermes words → saves to hephaestus_phrases</div>
 
     <div class="panel">
         <button id="forgeBtn">⚒️ Forge Phrases</button>
+        <button id="clearBtn">🗑️ Clear All Phrases</button>
+        <button id="checkBtn">🔍 Check Words</button>
         <div id="stats" class="stats" style="margin-top: 1rem;"></div>
         <div id="phraseContainer" style="margin-top: 1rem;"></div>
     </div>
 
     <div class="panel">
-        <h2>📋 Log</h2>
-        <div id="logArea" class="log-area"><div class="log-entry">Ready.</div></div>
+        <div id="logArea" class="log-area"><div class="log-entry">Ready. Click 'Check Words' first to see what's in Hermes.</div></div>
     </div>
 </div>
 
 <script>
-    (function() {
-        const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
-        
-        let supabase = null;
-        
-        const PATTERNS = [
-            { template: "{noun} {verb}", type: "nv" },
-            { template: "{adj} {noun}", type: "adjn" },
-            { template: "{noun} of {noun}", type: "non" },
-            { template: "{noun} {verb} {noun}", type: "nvn" },
-            { template: "{verb} the {noun}", type: "vtn" },
-            { template: "The {adj} {noun}", type: "theadjn" }
-        ];
+(function() {
+    const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
+    
+    let db = null;
 
-        function addLog(msg, type = 'info') {
-            const logDiv = document.getElementById('logArea');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            logDiv.appendChild(entry);
-            entry.scrollIntoView({ behavior: 'smooth' });
+    const PATTERNS = [
+        { template: "{noun} {verb}" },
+        { template: "{adj} {noun}" },
+        { template: "{noun} of {noun}" },
+        { template: "{noun} {verb} {noun}" }
+    ];
+
+    function addLog(msg, type = 'info') {
+        const log = document.getElementById('logArea');
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        log.appendChild(entry);
+        entry.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function checkWords() {
+        const { data, error } = await db
+            .from('hermes_entries')
+            .select('body, word_type, trending_score')
+            .limit(20);
+
+        if (error) {
+            addLog(`Error: ${error.message}`, 'error');
+            return;
         }
 
-        async function loadWords() {
-            const { data, error } = await supabase
-                .from('hermes_entries')
-                .select('body, word_type, trending_score')
-                .gt('trending_score', 40)
-                .limit(100);
-
-            if (error) {
-                addLog(`Error loading words: ${error.message}`, 'error');
-                return { nouns: [], verbs: [], adjs: [] };
-            }
-
-            const nouns = data.filter(w => w.word_type === 'noun');
-            const verbs = data.filter(w => w.word_type === 'verb');
-            const adjs = data.filter(w => w.word_type === 'adj');
-
-            document.getElementById('stats').innerHTML = `
-                <span class="stat-badge">📚 Nouns: ${nouns.length}</span>
-                <span class="stat-badge">⚡ Verbs: ${verbs.length}</span>
-                <span class="stat-badge">🎨 Adjectives: ${adjs.length}</span>
-                <span class="stat-badge">📊 Total words: ${data.length}</span>
-            `;
-
-            return { nouns, verbs, adjs };
+        if (!data || data.length === 0) {
+            addLog('⚠️ Hermes table is empty! Run Hermes scraper first.', 'warning');
+            document.getElementById('stats').innerHTML = '❌ No words found. Run Hermes first.';
+            return;
         }
 
-        async function forgePhrases() {
-            addLog('🔥 Forging phrases...', 'info');
+        const nouns = data.filter(w => w.word_type === 'noun').length;
+        const verbs = data.filter(w => w.word_type === 'verb').length;
+        const adjs = data.filter(w => w.word_type === 'adj').length;
+        
+        document.getElementById('stats').innerHTML = `📊 Hermes has ${data.length} words (${nouns} nouns, ${verbs} verbs, ${adjs} adjectives)`;
+        addLog(`✅ Found ${data.length} words in Hermes. Sample: ${data.slice(0,3).map(w => w.body).join(', ')}`, 'success');
+    }
+
+    async function loadWords() {
+        const { data, error } = await db
+            .from('hermes_entries')
+            .select('body, word_type, trending_score')
+            .gt('trending_score', 30)
+            .limit(100);
+
+        if (error) {
+            addLog(`Error loading words: ${error.message}`, 'error');
+            return { nouns: [], verbs: [], adjs: [] };
+        }
+
+        const nouns = data.filter(w => w.word_type === 'noun');
+        const verbs = data.filter(w => w.word_type === 'verb');
+        const adjs = data.filter(w => w.word_type === 'adj');
+
+        return { nouns, verbs, adjs };
+    }
+
+    async function forgePhrases() {
+        addLog('🔥 Forging phrases...', 'info');
+        
+        // Check if we have words first
+        const { data: wordCheck } = await db.from('hermes_entries').select('id', { head: true, count: 'exact' });
+        if (!wordCheck || wordCheck.length === 0) {
+            addLog('❌ Hermes is empty. Run Hermes scraper first.', 'error');
+            return;
+        }
+        
+        const { nouns, verbs, adjs } = await loadWords();
+        
+        if (nouns.length < 2) {
+            addLog(`Not enough nouns (need at least 2, have ${nouns.length}). Add more words to Hermes.`, 'warning');
+            return;
+        }
+
+        // Clear old phrases
+        await db.from('hephaestus_phrases').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        
+        const phrases = [];
+        const used = new Set();
+
+        for (let i = 0; i < 20; i++) {
+            const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
             
-            const { nouns, verbs, adjs } = await loadWords();
+            const noun1 = nouns[Math.floor(Math.random() * nouns.length)];
+            const noun2 = nouns[Math.floor(Math.random() * nouns.length)];
+            const verb = verbs.length ? verbs[Math.floor(Math.random() * verbs.length)] : noun1;
+            const adj = adjs.length ? adjs[Math.floor(Math.random() * adjs.length)] : noun1;
             
-            if (nouns.length < 2) {
-                addLog('Not enough nouns (need at least 2). Run Hermes first.', 'warning');
-                return;
-            }
-
-            const phrases = [];
-            const usedCombos = new Set();
-
-            for (let i = 0; i < 20; i++) {
-                const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
-                
-                const noun1 = nouns[Math.floor(Math.random() * nouns.length)];
-                const noun2 = nouns.length > 1 ? nouns[Math.floor(Math.random() * nouns.length)] : noun1;
-                const verb = verbs.length ? verbs[Math.floor(Math.random() * verbs.length)] : noun1;
-                const adj = adjs.length ? adjs[Math.floor(Math.random() * adjs.length)] : noun1;
-                
-                let phrase = pattern.template;
-                phrase = phrase.replace(/{noun}/g, (match, offset) => {
-                    return offset === phrase.lastIndexOf('{noun}') ? noun2.body : noun1.body;
-                });
-                phrase = phrase.replace('{verb}', verb.body);
-                phrase = phrase.replace('{adj}', adj.body);
-                phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
-                
-                const comboKey = `${noun1.body}_${verb.body}_${noun2.body}`;
-                if (usedCombos.has(comboKey)) continue;
-                usedCombos.add(comboKey);
-                
-                const score = Math.min(100, Math.round((noun1.trending_score + verb.trending_score + noun2.trending_score) / 3));
-                phrases.push({ phrase, score });
-            }
-
-            displayPhrases(phrases);
-            addLog(`✨ Forged ${phrases.length} unique phrases`, 'success');
+            let phrase = pattern.template;
+            phrase = phrase.replace('{noun}', noun1.body);
+            phrase = phrase.replace(/{noun}/g, noun2.body);
+            phrase = phrase.replace('{verb}', verb.body);
+            phrase = phrase.replace('{adj}', adj.body);
+            phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
+            
+            const key = phrase.toLowerCase();
+            if (used.has(key)) continue;
+            used.add(key);
+            
+            const score = Math.min(100, Math.round((noun1.trending_score + noun2.trending_score + (verb.trending_score || 50)) / 3));
+            phrases.push({ phrase, score });
         }
 
-        function displayPhrases(phrases) {
-            const container = document.getElementById('phraseContainer');
-            if (!phrases.length) {
-                container.innerHTML = '<div class="log-entry">No phrases generated.</div>';
-                return;
-            }
-            container.innerHTML = phrases.map(p => `
-                <div class="phrase-card">
-                    <div class="phrase-text">${escapeHtml(p.phrase)}</div>
-                    <div class="phrase-score">✨ ${p.score}%</div>
-                </div>
-            `).join('');
-        }
-
-        function escapeHtml(str) { 
-            return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); 
-        }
-
-        document.getElementById('forgeBtn').addEventListener('click', forgePhrases);
-
-        async function init() {
-            if (!window.supabase) {
-                addLog('Supabase not loaded', 'error');
-                return;
-            }
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            addLog('🔥 Hephaestus ready. Forging phrases from quality seeds.', 'success');
-            await loadWords();
+        // Insert into database
+        let saved = 0;
+        for (const p of phrases) {
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7);
+            const { error } = await db.from('hephaestus_phrases').insert({
+                phrase: p.phrase,
+                score: p.score,
+                pattern_type: 'auto',
+                expires_at: expiresAt.toISOString()
+            });
+            if (!error) saved++;
         }
         
-        init();
-    })();
+        addLog(`✅ Forged and saved ${saved} phrases to hephaestus_phrases`, 'success');
+        displayPhrases(phrases);
+    }
+
+    async function displayPhrases(phrases) {
+        const container = document.getElementById('phraseContainer');
+        if (!phrases || !phrases.length) {
+            // Try to load existing phrases
+            const { data } = await db.from('hephaestus_phrases').select('phrase, score').order('created_at', { ascending: false }).limit(15);
+            if (data && data.length) {
+                container.innerHTML = data.map(p => `
+                    <div class="phrase-card" onclick="navigator.clipboard.writeText('${escapeHtml(p.phrase)}')">
+                        <div class="phrase-text">${escapeHtml(p.phrase)}</div>
+                        <div class="phrase-score">✨ ${p.score}%</div>
+                    </div>
+                `).join('');
+                addLog(`📖 Loaded ${data.length} existing phrases from database`, 'info');
+            } else {
+                container.innerHTML = '<div class="log-entry">No phrases yet. Click "Forge Phrases".</div>';
+            }
+            return;
+        }
+        
+        container.innerHTML = phrases.map(p => `
+            <div class="phrase-card" onclick="navigator.clipboard.writeText('${escapeHtml(p.phrase)}')">
+                <div class="phrase-text">${escapeHtml(p.phrase)}</div>
+                <div class="phrase-score">✨ ${p.score}%</div>
+            </div>
+        `).join('');
+    }
+
+    async function clearPhrases() {
+        await db.from('hephaestus_phrases').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        document.getElementById('phraseContainer').innerHTML = '<div class="log-entry">Phrases cleared.</div>';
+        addLog('🗑️ All phrases cleared from hephaestus_phrases', 'info');
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    }
+
+    document.getElementById('forgeBtn').addEventListener('click', forgePhrases);
+    document.getElementById('clearBtn').addEventListener('click', clearPhrases);
+    document.getElementById('checkBtn').addEventListener('click', checkWords);
+
+    async function init() {
+        if (!window.supabase) {
+            addLog('Supabase not loaded', 'error');
+            return;
+        }
+        db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Check if hephaestus_phrases table exists
+        const { error: tableCheck } = await db.from('hephaestus_phrases').select('id').limit(1);
+        if (tableCheck && tableCheck.message.includes('does not exist')) {
+            addLog('⚠️ hephaestus_phrases table missing. Create it in Supabase SQL first.', 'error');
+        } else {
+            addLog('🔥 Hephaestus ready. Click "Check Words" to see Hermes data.', 'success');
+            await displayPhrases();
+        }
+    }
+    
+    init();
+})();
 </script>
 </body>
 </html>

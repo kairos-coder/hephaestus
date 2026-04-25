@@ -3,517 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hephaestus · The Forge</title>
+    <title>Hephaestus · Phrase Forge</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: #0a0c12;
-            font-family: 'SF Mono', 'Courier New', monospace;
-            padding: 2rem;
-            color: #d4e0ed;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: #e07040;
-        }
-
-        .sub {
-            color: #6a7a8a;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #1e2535;
-            padding-bottom: 0.5rem;
-            font-size: 0.8rem;
-        }
-
-        .panel {
-            background: #0b0e16;
-            border: 1px solid #1e2535;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .panel h2 {
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            color: #e07040;
-            border-left: 2px solid #e07040;
-            padding-left: 0.5rem;
-        }
-
-        .phrase-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .phrase-card {
-            background: #0f141e;
-            border: 1px solid #1e2535;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            transition: all 0.2s;
-        }
-
-        .phrase-card:hover {
-            background: #1a1f2a;
-            border-color: #e07040;
-        }
-
-        .phrase-text {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #e0e2ed;
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-        }
-
-        .phrase-meta {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.65rem;
-            color: #6a7a8a;
-        }
-
-        .phrase-score {
-            color: #e07040;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        button {
-            background: #1e2535;
-            border: none;
-            color: #d4e0ed;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: monospace;
-            font-size: 0.75rem;
-        }
-
-        button:hover {
-            background: #e07040;
-            color: #0a0c12;
-        }
-
-        .copy-btn {
-            background: none;
-            border: 1px solid #1e2535;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.6rem;
-        }
-
-        .copy-btn:hover {
-            background: #e07040;
-            border-color: #e07040;
-        }
-
-        .log-area {
-            background: #060810;
-            border: 1px solid #1e2535;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            max-height: 300px;
-            overflow-y: auto;
-            font-size: 0.75rem;
-            font-family: monospace;
-        }
-
-        .log-entry {
-            padding: 0.25rem 0;
-            border-bottom: 1px solid #1a1f2a;
-            color: #6a7a8a;
-        }
-
-        .log-entry.success {
-            color: #6b8e23;
-        }
-
-        .log-entry.warning {
-            color: #e07040;
-        }
-
-        .log-entry.error {
-            color: #c0392b;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .stat-card {
-            background: #0f141e;
-            border: 1px solid #1e2535;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #e07040;
-        }
-
-        .stat-label {
-            font-size: 0.6rem;
-            color: #6a7a8a;
-        }
+        body { background: #0a0c12; font-family: monospace; padding: 2rem; color: #d4e0ed; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: #e07040; margin-bottom: 0.5rem; }
+        .sub { color: #6a7a8a; margin-bottom: 2rem; border-bottom: 1px solid #1e2535; padding-bottom: 0.5rem; }
+        .panel { background: #0b0e16; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 2rem; }
+        button { background: #1e2535; border: none; color: #d4e0ed; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+        button:hover { background: #e07040; }
+        .phrase-card { background: #0f141e; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; }
+        .phrase-text { font-size: 1rem; margin-bottom: 0.5rem; color: #e0e2ed; }
+        .phrase-score { color: #e07040; font-size: 0.7rem; }
+        .log-area { background: #060810; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1rem; max-height: 200px; overflow-y: auto; font-size: 0.75rem; }
+        .log-entry { padding: 0.25rem 0; border-bottom: 1px solid #1a1f2a; color: #6a7a8a; }
+        .log-entry.success { color: #6b8e23; }
+        .stats { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .stat-badge { background: #1a1f2a; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="container">
-    <h1>🔥 Hephaestus · The Forge</h1>
-    <div class="sub">Forging phrases · Saving to hephaestus_phrases · Full lineage</div>
-
-    <div class="stats-grid" id="statsGrid">
-        <div class="stat-card"><div class="stat-number" id="nounCount">—</div><div class="stat-label">Nouns</div></div>
-        <div class="stat-card"><div class="stat-number" id="verbCount">—</div><div class="stat-label">Verbs</div></div>
-        <div class="stat-card"><div class="stat-number" id="adjCount">—</div><div class="stat-label">Adjectives</div></div>
-    </div>
+    <h1>🔥 Hephaestus · Phrase Forge</h1>
+    <div class="sub">Generating meaningful phrases from quality words</div>
 
     <div class="panel">
-        <h2>🔨 Forged Phrases</h2>
-        <div class="button-group">
-            <button id="generateBtn">⚒️ Forge & Save Phrases</button>
-            <button id="copyAllBtn">📋 Copy All</button>
-            <button id="viewSavedBtn">📚 View Saved Phrases</button>
-        </div>
-        <div id="phraseContainer" class="phrase-grid">
-            <div class="log-entry">Click "Forge & Save Phrases" to create and persist.</div>
-        </div>
+        <button id="forgeBtn">⚒️ Forge Phrases</button>
+        <div id="stats" class="stats" style="margin-top: 1rem;"></div>
+        <div id="phraseContainer" style="margin-top: 1rem;"></div>
     </div>
 
     <div class="panel">
         <h2>📋 Log</h2>
-        <div id="logArea" class="log-area">
-            <div class="log-entry">Ready. Hephaestus awaits Hermes seeds.</div>
-        </div>
+        <div id="logArea" class="log-area"><div class="log-entry">Ready.</div></div>
     </div>
 </div>
 
 <script>
-    (function() {
-        const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
-        const BATCH_ID = crypto.randomUUID();
+    const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
+    let supabase = null;
 
-        let supabase = null;
-        let currentPhrases = [];
+    const PATTERNS = [
+        { template: "{noun} {verb}", type: "nv" },
+        { template: "{adj} {noun}", type: "adjn" },
+        { template: "{noun} of {noun}", type: "non" },
+        { template: "{noun} {verb} {noun}", type: "nvn" },
+        { template: "{verb} the {noun}", type: "vtn" },
+        { template: "The {adj} {noun}", type: "theadjn" }
+    ];
 
-        // Phrase patterns
-        const PATTERNS = [
-            { template: "{noun} {verb}", type: "nv", minWords: 2 },
-            { template: "{adj} {noun}", type: "adjn", minWords: 2 },
-            { template: "{noun} {verb} {noun}", type: "nvn", minWords: 3 },
-            { template: "{verb} {noun}", type: "vn", minWords: 2 },
-            { template: "{noun} {prep} {noun}", type: "npn", minWords: 3 }
-        ];
+    function addLog(msg, type = 'info') {
+        const log = document.getElementById('logArea');
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        log.appendChild(entry);
+        entry.scrollIntoView({ behavior: 'smooth' });
+    }
 
-        const WEAK_PHRASES = new Set([
-            'the thing', 'things that', 'people are', 'time to', 'way to',
-            'make it', 'get it', 'put it', 'set it'
-        ]);
+    async function loadWords() {
+        const { data, error } = await supabase
+            .from('hermes_entries')
+            .select('body, word_type, trending_score')
+            .eq('trending_score', 73)
+            .or('body.in.(claude,agent,openai,codex,source,skill,html,code,prompts,principles,prototype,agents,coding)');
+            // .gt('trending_score', 40);
 
-        const PREPOSITIONS = ['of', 'in', 'by', 'with', 'through', 'beyond', 'across', 'within', 'without', 'beneath', 'between', 'among'];
-
-        function semanticAffinity(wordA, wordB) {
-            let affinity = 1.0;
-            if (wordA.source && wordB.source && wordA.source === wordB.source) affinity *= 1.2;
-            if (wordA.type === wordB.type) affinity *= 1.1;
-            if ((wordA.type === 'verb' && wordB.type === 'noun') || (wordA.type === 'noun' && wordB.type === 'verb')) affinity *= 1.15;
-            if ((wordA.type === 'adj' && wordB.type === 'noun') || (wordA.type === 'noun' && wordB.type === 'adj')) affinity *= 1.1;
-            if (wordA.word[0] === wordB.word[0]) affinity *= 1.05;
-            return affinity;
+        if (error) {
+            addLog(`Error loading words: ${error.message}`, 'error');
+            return { nouns: [], verbs: [], adjs: [] };
         }
 
-        function applyDecay(score, createdAt) {
-            const ageHours = (Date.now() - new Date(createdAt)) / (1000 * 60 * 60);
-            const decay = Math.exp(-ageHours / 24);
-            return score * decay;
+        const nouns = data.filter(w => w.word_type === 'noun');
+        const verbs = data.filter(w => w.word_type === 'verb');
+        const adjs = data.filter(w => w.word_type === 'adj');
+
+        document.getElementById('stats').innerHTML = `
+            <span class="stat-badge">📚 Nouns: ${nouns.length}</span>
+            <span class="stat-badge">⚡ Verbs: ${verbs.length}</span>
+            <span class="stat-badge">🎨 Adjectives: ${adjs.length}</span>
+        `;
+
+        return { nouns, verbs, adjs };
+    }
+
+    async function forgePhrases() {
+        addLog('🔥 Forging phrases...', 'info');
+        
+        const { nouns, verbs, adjs } = await loadWords();
+        
+        if (nouns.length < 2) {
+            addLog('Not enough nouns. Run Hermes first.', 'warning');
+            return;
         }
 
-        async function loadStats() {
-            const { data, error } = await supabase
-                .from('hermes_entries')
-                .select('word_type');
+        const phrases = [];
+        const usedCombos = new Set();
 
-            if (error) return;
-            document.getElementById('nounCount').textContent = data.filter(d => d.word_type === 'noun').length;
-            document.getElementById('verbCount').textContent = data.filter(d => d.word_type === 'verb').length;
-            document.getElementById('adjCount').textContent = data.filter(d => d.word_type === 'adj').length;
-        }
-
-        async function fetchWeightedWords() {
-            const { data, error } = await supabase
-                .from('hermes_entries')
-                .select('id, body, word_type, trending_score, source, created_at')
-                .order('trending_score', { ascending: false })
-                .limit(300);
-
-            if (error) {
-                addLog(`Failed to fetch seeds: ${error.message}`, 'error');
-                return { nouns: [], verbs: [], adjs: [] };
-            }
-
-            const nouns = [], verbs = [], adjs = [];
-            for (const item of data) {
-                const decayedScore = applyDecay(item.trending_score || 1, item.created_at);
-                const entry = { id: item.id, word: item.body, score: decayedScore, source: item.source, type: item.word_type };
-                if (item.word_type === 'noun') nouns.push(entry);
-                else if (item.word_type === 'verb') verbs.push(entry);
-                else if (item.word_type === 'adj') adjs.push(entry);
-            }
-            nouns.sort((a,b) => b.score - a.score);
-            verbs.sort((a,b) => b.score - a.score);
-            adjs.sort((a,b) => b.score - a.score);
-            addLog(`Loaded ${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives`, 'success');
-            return { nouns, verbs, adjs };
-        }
-
-        function selectWordWithAffinity(candidates, previousWord = null) {
-            if (!candidates.length) return null;
-            if (!previousWord) {
-                const totalWeight = candidates.reduce((sum, i) => sum + i.score, 0);
-                let random = Math.random() * totalWeight;
-                for (const item of candidates) {
-                    if (random < item.score) return item;
-                    random -= item.score;
-                }
-                return candidates[0];
-            }
-            const scored = candidates.map(c => ({ ...c, affinityScore: c.score * semanticAffinity(c, previousWord) }));
-            scored.sort((a,b) => b.affinityScore - a.affinityScore);
-            return scored[0];
-        }
-
-        function generatePhrase(pattern, nouns, verbs, adjs, usedSignalIds = new Set()) {
-            const usedEntries = [];
-            let lastWord = null;
-            const nounCount = (pattern.template.match(/{noun}/g) || []).length;
-            const selectedNouns = [];
-            for (let i = 0; i < nounCount; i++) {
-                const nounWord = selectWordWithAffinity(nouns, lastWord);
-                if (nounWord) {
-                    selectedNouns.push(nounWord.word);
-                    usedEntries.push(nounWord);
-                    if (nounWord.id) usedSignalIds.add(nounWord.id);
-                    lastWord = nounWord;
-                } else {
-                    selectedNouns.push('resonance');
-                }
-            }
-            const verbWord = selectWordWithAffinity(verbs, lastWord);
-            const verb = verbWord ? verbWord.word : 'emerges';
-            if (verbWord) {
-                usedEntries.push(verbWord);
-                if (verbWord.id) usedSignalIds.add(verbWord.id);
-            }
-            const adjWord = selectWordWithAffinity(adjs, lastWord);
-            const adj = adjWord ? adjWord.word : 'new';
-            if (adjWord) {
-                usedEntries.push(adjWord);
-                if (adjWord.id) usedSignalIds.add(adjWord.id);
-            }
-            const prep = PREPOSITIONS[Math.floor(Math.random() * PREPOSITIONS.length)];
+        for (let i = 0; i < 15; i++) {
+            const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+            
+            const noun1 = nouns[Math.floor(Math.random() * nouns.length)];
+            const noun2 = nouns.length > 1 ? nouns[Math.floor(Math.random() * nouns.length)] : noun1;
+            const verb = verbs.length ? verbs[Math.floor(Math.random() * verbs.length)] : nouns[0];
+            const adj = adjs.length ? adjs[Math.floor(Math.random() * adjs.length)] : nouns[0];
+            
             let phrase = pattern.template;
-            phrase = phrase.replace(/{noun}/g, () => selectedNouns.shift() || 'resonance');
-            phrase = phrase.replace('{verb}', verb);
-            phrase = phrase.replace('{adj}', adj);
-            phrase = phrase.replace('{prep}', prep);
+            phrase = phrase.replace('{noun}', noun1.body);
+            phrase = phrase.replace(/{noun}/g, (match, offset) => {
+                return offset === phrase.lastIndexOf('{noun}') ? noun2.body : noun1.body;
+            });
+            phrase = phrase.replace('{verb}', verb.body);
+            phrase = phrase.replace('{adj}', adj.body);
             phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
-            let affinityTotal = 1.0;
-            for (let i = 0; i < usedEntries.length - 1; i++) {
-                affinityTotal *= semanticAffinity(usedEntries[i], usedEntries[i + 1]);
-            }
-            return { phrase, usedEntries, patternType: pattern.type, affinityTotal, usedSignalIds: Array.from(usedSignalIds) };
+            
+            const comboKey = `${noun1.body}_${verb.body}_${noun2.body}`;
+            if (usedCombos.has(comboKey)) continue;
+            usedCombos.add(comboKey);
+            
+            const score = Math.min(100, Math.round((noun1.trending_score + verb.trending_score + noun2.trending_score) / 3));
+            phrases.push({ phrase, score });
         }
 
-        function isWeakPhrase(phrase) {
-            const lower = phrase.toLowerCase();
-            if (WEAK_PHRASES.has(lower)) return true;
-            if (lower.split(' ').length < 2) return true;
-            return false;
+        displayPhrases(phrases);
+        addLog(`✨ Forged ${phrases.length} phrases`, 'success');
+    }
+
+    function displayPhrases(phrases) {
+        const container = document.getElementById('phraseContainer');
+        if (!phrases.length) {
+            container.innerHTML = '<div class="log-entry">No phrases generated.</div>';
+            return;
         }
+        container.innerHTML = phrases.map(p => `
+            <div class="phrase-card">
+                <div class="phrase-text">${escapeHtml(p.phrase)}</div>
+                <div class="phrase-score">✨ ${p.score}%</div>
+            </div>
+        `).join('');
+    }
 
-        function calculatePhraseScore(phrase, usedEntries) {
-            let score = 70;
-            for (const entry of usedEntries) score += entry.score * 0.3;
-            let affinityProduct = 1.0;
-            for (let i = 0; i < usedEntries.length - 1; i++) affinityProduct *= semanticAffinity(usedEntries[i], usedEntries[i + 1]);
-            score += (affinityProduct - 1) * 50;
-            const weakWords = ['thing', 'people', 'time', 'way', 'make', 'get'];
-            for (const w of weakWords) if (phrase.toLowerCase().includes(w)) score -= 15;
-            return Math.min(100, Math.max(0, Math.round(score)));
-        }
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
 
-        async function savePhrasesToDB(phrases) {
-            let saved = 0;
-            for (const p of phrases) {
-                const expiresAt = new Date();
-                expiresAt.setDate(expiresAt.getDate() + 7);
-                const { error } = await supabase
-                    .from('hephaestus_phrases')
-                    .insert({
-                        phrase: p.phrase,
-                        score: p.score,
-                        affinity_score: p.affinityScore,
-                        pattern_type: p.patternType,
-                        used_signal_ids: p.usedSignalIds || [],
-                        used_words: p.usedWords || [],
-                        batch_id: BATCH_ID,
-                        expires_at: expiresAt.toISOString()
-                    });
-                if (error) {
-                    addLog(`⚠️ Could not save "${p.phrase}": ${error.message}`, 'warning');
-                } else {
-                    saved++;
-                }
-            }
-            return saved;
-        }
+    document.getElementById('forgeBtn').addEventListener('click', forgePhrases);
 
-        async function generateAndSavePhrases() {
-            addLog('🔨 Forging phrases with semantic affinity...', 'info');
-            const { nouns, verbs, adjs } = await fetchWeightedWords();
-            if (nouns.length < 5 || verbs.length < 3) {
-                addLog('⚠️ Not enough seeds. Run Hermes first.', 'warning');
-                return [];
-            }
-            const candidates = [];
-            const usedCombos = new Set();
-            for (let i = 0; i < 60; i++) {
-                const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
-                const usedSignalIds = new Set();
-                const { phrase, usedEntries, patternType, affinityTotal, usedSignalIds: signalIds } = generatePhrase(pattern, nouns, verbs, adjs, usedSignalIds);
-                const comboKey = usedEntries.map(e => e.word).join('_');
-                if (usedCombos.has(comboKey)) continue;
-                usedCombos.add(comboKey);
-                if (isWeakPhrase(phrase)) continue;
-                const score = calculatePhraseScore(phrase, usedEntries);
-                candidates.push({ 
-                    phrase, 
-                    score, 
-                    affinityScore: Math.round(affinityTotal * 100),
-                    patternType, 
-                    usedWords: usedEntries.map(e => e.word),
-                    usedSignalIds: signalIds
-                });
-            }
-            candidates.sort((a,b) => b.score - a.score);
-            const topPhrases = candidates.slice(0, 15);
-            addLog(`⚒️ Forged ${topPhrases.length} phrases, saving to database...`, 'success');
-            const saved = await savePhrasesToDB(topPhrases);
-            addLog(`💾 Saved ${saved} phrases to hephaestus_phrases (batch: ${BATCH_ID.slice(0,8)})`, 'success');
-            currentPhrases = topPhrases;
-            displayPhrases(topPhrases);
-            return topPhrases;
-        }
-
-        async function loadSavedPhrases() {
-            addLog('📚 Loading saved phrases from database...', 'info');
-            const { data, error } = await supabase
-                .from('hephaestus_phrases')
-                .select('phrase, score, affinity_score, pattern_type, created_at')
-                .order('score', { ascending: false })
-                .limit(30);
-            if (error) {
-                addLog(`Failed to load saved phrases: ${error.message}`, 'error');
-                return;
-            }
-            if (!data || data.length === 0) {
-                addLog('No saved phrases found. Forge some first.', 'warning');
-                return;
-            }
-            currentPhrases = data.map(p => ({
-                phrase: p.phrase,
-                score: p.score,
-                affinityScore: p.affinity_score,
-                patternType: p.pattern_type,
-                saved: true
-            }));
-            displayPhrases(currentPhrases);
-            addLog(`📖 Loaded ${data.length} saved phrases`, 'success');
-        }
-
-        function displayPhrases(phrases) {
-            const container = document.getElementById('phraseContainer');
-            if (!phrases.length) {
-                container.innerHTML = '<div class="log-entry">No phrases yet. Forge some.</div>';
-                return;
-            }
-            container.innerHTML = phrases.map(p => `
-                <div class="phrase-card" data-phrase="${escapeHtml(p.phrase)}">
-                    <div class="phrase-text">${escapeHtml(p.phrase)}</div>
-                    <div class="phrase-meta">
-                        <span class="phrase-score">✨ ${p.score}%</span>
-                        <span>affinity: ${p.affinityScore}%</span>
-                        <span>pattern: ${p.patternType}</span>
-                        <button class="copy-btn" onclick="copyPhrase('${escapeHtml(p.phrase).replace(/'/g, "\\'")}')">📋 Copy</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function addLog(message, type = 'info') {
-            const logDiv = document.getElementById('logArea');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            logDiv.appendChild(entry);
-            entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        window.copyPhrase = function(phrase) {
-            navigator.clipboard.writeText(phrase);
-            addLog(`📋 Copied "${phrase}" to clipboard`, 'success');
-        };
-
-        async function copyAllPhrases() {
-            const phrases = currentPhrases.map(p => p.phrase);
-            if (phrases.length) {
-                navigator.clipboard.writeText(phrases.join('\n\n'));
-                addLog(`📋 Copied all ${phrases.length} phrases to clipboard`, 'success');
-            }
-        }
-
-        function escapeHtml(str) {
-            return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-        }
-
-        async function init() {
-            if (!window.supabase) {
-                console.error('Supabase not loaded');
-                return;
-            }
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            await loadStats();
-            document.getElementById('generateBtn').addEventListener('click', generateAndSavePhrases);
-            document.getElementById('copyAllBtn').addEventListener('click', copyAllPhrases);
-            document.getElementById('viewSavedBtn').addEventListener('click', loadSavedPhrases);
-            addLog('🔥 Hephaestus ready. Forging and saving to hephaestus_phrases.', 'success');
-        }
-
-        init();
-    })();
+    async function init() {
+        if (!window.supabase) return;
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        addLog('🔥 Hephaestus ready. Forging phrases from quality seeds.', 'success');
+        await loadWords();
+    }
+    init();
 </script>
 </body>
 </html>

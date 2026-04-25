@@ -3,51 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Hephaestus Gate · 12–15 Hz · Orange Band</title>
+    <title>🔥 Hephaestus Gate · 2–4 Hz · Orange Band</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0a0c12; font-family: 'Courier New', monospace; padding: 2rem; color: #d4e0ed; }
+        body { 
+            background: #0a0c12; 
+            font-family: 'Courier New', monospace; 
+            padding: 2rem; 
+            color: #d4e0ed;
+        }
         .container { max-width: 1400px; margin: 0 auto; }
         
-        .header { border-left: 4px solid #e07040; padding-left: 1rem; margin-bottom: 2rem; }
+        .header { 
+            border-left: 4px solid #e07040; 
+            padding-left: 1rem; 
+            margin-bottom: 2rem;
+        }
         h1 { font-size: 2rem; color: #e07040; letter-spacing: -1px; }
         .sub { color: #6a7a8a; font-size: 0.8rem; margin-top: 0.25rem; }
         .frequency { color: #e07040; }
         
-        .panel { background: #0b0e16; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .panel-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: #6a7a8a; margin-bottom: 1rem; }
+        .panel { 
+            background: #0b0e16; 
+            border: 1px solid #1e2535; 
+            border-radius: 0.5rem; 
+            padding: 1.5rem; 
+            margin-bottom: 1.5rem;
+        }
+        .panel-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #6a7a8a;
+            margin-bottom: 1rem;
+        }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-        .stat-card { background: #0f141e; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 0.75rem; text-align: center; }
-        .stat-number { font-size: 1.5rem; font-weight: bold; color: #e07040; }
-        .stat-label { font-size: 0.7rem; color: #6a7a8a; margin-top: 0.25rem; }
+        .input-area {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-direction: column;
+        }
+        textarea {
+            background: #060810;
+            border: 1px solid #1e2535;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: #d4e0ed;
+            font-family: monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            width: 100%;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #e07040;
+        }
         
-        .input-area { display: flex; gap: 1rem; margin-bottom: 1rem; flex-direction: column; }
-        textarea { background: #060810; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 0.75rem; color: #d4e0ed; font-family: monospace; font-size: 0.9rem; resize: vertical; width: 100%; }
-        textarea:focus { outline: none; border-color: #e07040; }
+        button {
+            background: #1e2535;
+            border: none;
+            color: #d4e0ed;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #e07040;
+            color: #0a0c12;
+        }
+        button.primary {
+            background: #e07040;
+            color: #0a0c12;
+        }
+        button.primary:hover {
+            background: #f08050;
+        }
         
-        button { background: #1e2535; border: none; color: #d4e0ed; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-family: monospace; font-size: 0.8rem; transition: all 0.2s; }
-        button:hover { background: #e07040; color: #0a0c12; }
-        button.primary { background: #e07040; color: #0a0c12; }
-        button.primary:hover { background: #f08050; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: #0f141e;
+            border: 1px solid #1e2535;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e07040;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #6a7a8a;
+            margin-top: 0.25rem;
+        }
         
-        .phrase-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
-        .phrase-card { background: #0f141e; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 0.75rem; cursor: pointer; transition: all 0.2s; }
-        .phrase-card:hover { background: #1a1f2a; border-color: #e07040; }
-        .phrase-text { font-size: 0.85rem; color: #d4e0ed; }
-        .phrase-meta { font-size: 0.65rem; color: #e07040; margin-top: 0.5rem; display: flex; gap: 1rem; }
+        .craft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .craft-card {
+            background: #0f141e;
+            border: 1px solid #1e2535;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .craft-card:hover {
+            background: #1a1f2a;
+            border-color: #e07040;
+        }
+        .craft-text {
+            font-size: 0.85rem;
+            color: #d4e0ed;
+        }
+        .craft-meta {
+            font-size: 0.65rem;
+            color: #e07040;
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 1rem;
+        }
         
-        .log-area { background: #060810; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; font-size: 0.75rem; }
-        .log-entry { padding: 0.25rem 0; border-bottom: 1px solid #1a1f2a; color: #6a7a8a; }
+        .log-area {
+            background: #060810;
+            border: 1px solid #1e2535;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+        }
+        .log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #1a1f2a;
+            color: #6a7a8a;
+        }
         .log-entry.success { color: #6b8e23; }
         .log-entry.error { color: #cd5c5c; }
         .log-entry.warning { color: #e07040; }
         
-        .word-count { font-size: 0.7rem; margin-top: 0.5rem; text-align: right; }
+        .word-count {
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+            text-align: right;
+        }
         .word-count.valid { color: #6b8e23; }
         .word-count.invalid { color: #cd5c5c; }
         
-        hr { border-color: #1e2535; margin: 1rem 0; }
+        .signal-badge {
+            display: inline-block;
+            background: #1e2535;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            margin: 0.2rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .signal-badge:hover {
+            background: #e07040;
+            color: #0a0c12;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -55,34 +183,40 @@
 <div class="container">
     <div class="header">
         <h1>🔥 HEPHAESTUS GATE</h1>
-        <div class="sub">CRAFT · CONSTRUCTION · PRECISION · <span class="frequency">12–15 Hz (Orange Band)</span></div>
-        <div class="sub">Accepts 26–50 words · Forges phrases from Hermes signals · Expires in 14 days</div>
+        <div class="sub">CRAFT · CONSTRUCTION · PRECISION · <span class="frequency">2–4 Hz (Theta/Orange Band)</span></div>
+        <div class="sub">Accepts 4–8 words · Forges crafts from Hermes reflexes · Expires in 7 days</div>
     </div>
 
     <div class="stats-grid" id="statsGrid"></div>
 
     <div class="panel">
-        <div class="panel-title">⚒️ MANUAL CRAFT · ENTER PHRASE (26–50 WORDS)</div>
+        <div class="panel-title">🔨 MANUAL CRAFT · ENTER PHRASE (4–8 WORDS)</div>
         <div class="input-area">
-            <textarea id="craftInput" rows="4" placeholder="Enter a crafted phrase or construction (26–50 words)&#10;&#10;Examples:&#10;• The resonance cascade emerged from the alignment of neural nets and quantum vectors at the frontier of inference latency.&#10;• We built a scalable pipeline to automate the workflow, using async operations and cloud-native architecture to process semantic embeddings."></textarea>
+            <textarea id="craftInput" rows="3" placeholder="Enter a crafted phrase (4–8 words)&#10;&#10;Examples:&#10;• the resonance cascade emerges&#10;• neural nets align at the frontier&#10;• deep flow through quantum foam"></textarea>
         </div>
         <button id="submitBtn" class="primary">🔨 Forge Concept</button>
         <button id="clearInputBtn">Clear</button>
-        <div class="word-count" id="wordCount">0 / 26–50 words</div>
+        <div class="word-count" id="wordCount">0 / 4–8 words</div>
     </div>
 
     <div class="panel">
-        <div class="panel-title">🏗️ FORGE FROM HERMES SIGNALS</div>
-        <button id="checkHermesBtn">🔍 Check Hermes Signals</button>
-        <button id="forgeFromHermesBtn">⚒️ Forge Phrases from Hermes</button>
-        <button id="clearPhrasesBtn">🗑️ Clear All Forged Phrases</button>
-        <div id="phraseContainer" class="phrase-grid" style="margin-top: 1rem;"></div>
+        <div class="panel-title">🏗️ FORGE FROM HERMES REFLEXES</div>
+        <button id="checkHermesBtn">🔍 Check Hermes Reflexes</button>
+        <button id="forgeFromHermesBtn">⚒️ Forge Crafts from Hermes</button>
+        <button id="clearCraftsBtn">🗑️ Clear All Crafts</button>
+        
+        <div style="margin-top: 1rem;">
+            <div class="panel-title" style="margin-bottom: 0.5rem;">📡 RECENT HERMES REFLEXES</div>
+            <div id="hermesSignals" style="font-size: 0.7rem;"></div>
+        </div>
+        
+        <div id="craftContainer" class="craft-grid" style="margin-top: 1rem;"></div>
     </div>
 
     <div class="panel">
         <div class="panel-title">📋 GATE LOG</div>
         <div id="ingestLog" class="log-area">
-            <div class="log-entry">🔥 Hephaestus Gate operational. 12–15 Hz · Orange · Crafting 26–50 word constructions.</div>
+            <div class="log-entry">🔥 Hephaestus Gate operational. 2–4 Hz · Orange · Forging 4–8 word crafts.</div>
         </div>
     </div>
 </div>
@@ -97,21 +231,23 @@
         
         const BAND_CONFIG = {
             name: 'hephaestus',
-            minWords: 26,
-            maxWords: 50,
-            expiryDays: 14,
-            frequency: '12–15 Hz',
+            minWords: 4,
+            maxWords: 8,
+            expiryDays: 7,
+            frequency: '2–4 Hz',
             color: 'Orange'
         };
         
-        // Phrase patterns for forging
+        // Craft patterns for forging from Hermes reflexes
         const PATTERNS = [
-            { template: "{noun} {verb}", minWords: 2, maxWords: 4 },
-            { template: "{adj} {noun}", minWords: 2, maxWords: 3 },
-            { template: "{noun} of {noun}", minWords: 3, maxWords: 5 },
-            { template: "{noun} {verb} {noun}", minWords: 3, maxWords: 5 },
-            { template: "The {adj} {noun} {verb} the {noun}", minWords: 5, maxWords: 7 },
-            { template: "When {noun} {verb}, the {adj} {noun} emerges", minWords: 6, maxWords: 8 }
+            "{noun} {verb}",
+            "{adj} {noun}",
+            "{noun} of {noun}",
+            "{noun} {verb} {noun}",
+            "the {adj} {noun} {verb}",
+            "{noun} and {noun}",
+            "{verb} the {noun}",
+            "when {noun} {verb}"
         ];
         
         // ============================================
@@ -147,20 +283,22 @@
             }
             
             _calculateCraftScore(body, sourceWords = []) {
-                // Hephaestus measures: length, complexity, originality
                 const wordCount = this._countWords(body);
-                const lengthScore = Math.min(40, (wordCount / this.maxWords) * 40);
                 
-                // Lexical diversity (unique words / total words)
+                // Perfect length bonus (6 words is ideal craft)
+                const lengthIdeal = Math.abs(wordCount - 6);
+                const lengthScore = Math.max(0, 30 - (lengthIdeal * 3));
+                
+                // Lexical diversity
                 const words = body.toLowerCase().match(/\b\w+\b/g) || [];
                 const uniqueWords = new Set(words);
                 const diversity = uniqueWords.size / words.length;
                 const diversityScore = diversity * 30;
                 
-                // Penalize repetition
-                const repetitionPenalty = Math.max(0, (1 - diversity) * 20);
+                // Source word integration (if forged from Hermes)
+                const sourceBonus = sourceWords.length > 0 ? Math.min(20, sourceWords.length * 4) : 0;
                 
-                return Math.min(100, Math.round(lengthScore + diversityScore - repetitionPenalty + 20));
+                return Math.min(100, Math.round(lengthScore + diversityScore + sourceBonus + 20));
             }
             
             _extractMetadata(body) {
@@ -211,7 +349,6 @@
                         ...metadata,
                         source_words: raw.sourceWords || [],
                         pattern_used: raw.pattern || 'manual',
-                        iteration: raw.iteration || 1,
                         ...raw.metadata
                     },
                     expires_at: expiresAt.toISOString(),
@@ -233,12 +370,21 @@
                 
                 return { success: true, id: data.id, score: craftScore, wordCount: wordCount };
             }
+            
+            async processBatch(items) {
+                const results = [];
+                for (const item of items) {
+                    const result = await this.process(item);
+                    results.push(result);
+                }
+                return results;
+            }
         }
         
         // ============================================
-        // PHRASE FORGING FROM HERMES
+        // FORGE FROM HERMES REFLEXES
         // ============================================
-        async function loadHermesSignals(limit = 100) {
+        async function loadHermesReflexes(limit = 50) {
             const { data, error } = await supabase
                 .from('concepts')
                 .select('body, word_type, score, metadata')
@@ -247,84 +393,72 @@
                 .limit(limit);
             
             if (error) {
-                addLog(`Error loading Hermes signals: ${error.message}`, 'error');
-                return { nouns: [], verbs: [], adjs: [], signals: [] };
+                addLog(`Error loading Hermes reflexes: ${error.message}`, 'error');
+                return { nouns: [], verbs: [], adjs: [], reflexes: [], total: 0 };
             }
             
             const nouns = data.filter(w => w.word_type === 'noun' || w.word_type === 'signal');
             const verbs = data.filter(w => w.word_type === 'verb');
             const adjs = data.filter(w => w.word_type === 'adj');
             
-            return { nouns, verbs, adjs, signals: data, total: data.length };
+            return { nouns, verbs, adjs, reflexes: data, total: data.length };
         }
         
-        async function forgePhrasesFromHermes() {
-            addLog('🔥 Forging phrases from Hermes signals...', 'info');
+        async function forgeCraftsFromHermes() {
+            addLog('🔥 Forging crafts from Hermes reflexes...', 'info');
             
-            const { nouns, verbs, adjs, total, signals } = await loadHermesSignals();
+            const { nouns, verbs, adjs, total, reflexes } = await loadHermesReflexes();
             
             if (total === 0) {
-                addLog('❌ No Hermes signals found. Run Hermes scraper first.', 'error');
+                addLog('❌ No Hermes reflexes found. Run Hermes scraper first.', 'error');
                 return;
             }
             
-            addLog(`📊 Loaded ${total} Hermes signals (${nouns.length} nouns/signals, ${verbs.length} verbs, ${adjs.length} adjectives)`, 'info');
+            addLog(`📊 Loaded ${total} Hermes reflexes (${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives)`, 'info');
             
-            if (nouns.length < 3) {
-                addLog(`⚠️ Need at least 3 nouns/signals (have ${nouns.length}). Forging with what's available.`, 'warning');
+            if (nouns.length < 2) {
+                addLog(`⚠️ Need at least 2 nouns (have ${nouns.length}). Forging with what's available.`, 'warning');
             }
             
-            // Clear existing Hephaestus concepts (optional - we'll delete old ones)
-            const { error: deleteError } = await supabase
-                .from('concepts')
-                .delete()
-                .eq('band', 'hephaestus')
-                .eq('source', 'forge');
-            
-            if (deleteError) {
-                addLog(`Clear warning: ${deleteError.message}`, 'warning');
-            }
-            
-            const forgedConcepts = [];
+            const forgedCrafts = [];
             const usedPhrases = new Set();
             
-            // Forge up to 15 phrases
+            // Forge up to 15 crafts
             for (let i = 0; i < 15; i++) {
                 const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
                 
-                const noun1 = nouns[Math.floor(Math.random() * nouns.length)] || { body: 'system' };
-                const noun2 = nouns[Math.floor(Math.random() * nouns.length)] || { body: 'process' };
-                const verb = verbs.length ? verbs[Math.floor(Math.random() * verbs.length)] : { body: 'emerges' };
-                const adj = adjs.length ? adjs[Math.floor(Math.random() * adjs.length)] : { body: 'dynamic' };
+                const noun1 = nouns[Math.floor(Math.random() * nouns.length)] || { body: 'system', score: 50 };
+                const noun2 = nouns[Math.floor(Math.random() * nouns.length)] || { body: 'process', score: 50 };
+                const verb = verbs.length ? verbs[Math.floor(Math.random() * verbs.length)] : { body: 'emerges', score: 50 };
+                const adj = adjs.length ? adjs[Math.floor(Math.random() * adjs.length)] : { body: 'dynamic', score: 50 };
                 
-                let phrase = pattern.template;
-                phrase = phrase.replace('{noun}', noun1.body);
-                phrase = phrase.replace(/{noun}/g, noun2.body);
-                phrase = phrase.replace('{verb}', verb.body);
-                phrase = phrase.replace('{adj}', adj.body);
-                phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1);
+                let craft = pattern.template;
+                craft = craft.replace('{noun}', noun1.body);
+                craft = craft.replace(/{noun}/g, noun2.body);
+                craft = craft.replace('{verb}', verb.body);
+                craft = craft.replace('{adj}', adj.body);
+                craft = craft.charAt(0).toUpperCase() + craft.slice(1);
                 
-                // Ensure phrase is within word bounds
-                const wordCount = phrase.split(/\s+/).length;
-                if (wordCount < BAND_CONFIG.minWords && forgedConcepts.length > 0) {
-                    // Expand short phrases
-                    const expansion = ` ${nouns[0]?.body || 'system'} ${verbs[0]?.body || 'operates'}`;
-                    phrase = phrase + expansion;
+                // Ensure craft is within 4-8 words
+                let wordCount = craft.split(/\s+/).length;
+                if (wordCount < 4) {
+                    craft = `${craft} ${noun1.body} ${verb.body}`;
+                } else if (wordCount > 8) {
+                    craft = craft.split(/\s+/).slice(0, 8).join(' ');
                 }
                 
-                const phraseKey = phrase.toLowerCase();
-                if (usedPhrases.has(phraseKey)) continue;
-                usedPhrases.add(phraseKey);
+                const craftKey = craft.toLowerCase();
+                if (usedPhrases.has(craftKey)) continue;
+                usedPhrases.add(craftKey);
                 
-                // Calculate score based on source signals
+                // Calculate score based on source reflexes
                 const avgScore = (noun1.score + noun2.score + verb.score + adj.score) / 4;
-                const craftScore = Math.min(100, Math.round(avgScore * 0.7 + 30));
+                const craftScore = Math.min(100, Math.round(avgScore * 0.6 + 30));
                 
-                forgedConcepts.push({
-                    body: phrase,
+                forgedCrafts.push({
+                    body: craft,
                     source: 'forge',
                     score: craftScore,
-                    wordType: 'concept',
                     pattern: pattern.template,
                     sourceWords: [noun1.body, noun2.body, verb.body, adj.body].filter(Boolean)
                 });
@@ -332,26 +466,26 @@
             
             // Save to database via Hephaestus gate
             let saved = 0;
-            for (const concept of forgedConcepts) {
+            for (const craft of forgedCrafts) {
                 const result = await hephaestusGate.process({
-                    body: concept.body,
-                    source: concept.source,
-                    score: concept.score,
-                    pattern: concept.pattern,
-                    sourceWords: concept.sourceWords,
+                    body: craft.body,
+                    source: craft.source,
+                    score: craft.score,
+                    pattern: craft.pattern,
+                    sourceWords: craft.sourceWords,
                     metadata: { forged: true, timestamp: Date.now() }
                 });
                 
                 if (result.success) saved++;
             }
             
-            addLog(`✅ Forged and saved ${saved} concepts to Hephaestus band`, 'success');
-            await displayHephaestusConcepts();
+            addLog(`✅ Forged and saved ${saved} crafts to Hephaestus band`, 'success');
+            await displayHephaestusCrafts();
             await updateStats();
         }
         
-        async function displayHephaestusConcepts() {
-            const container = document.getElementById('phraseContainer');
+        async function displayHephaestusCrafts() {
+            const container = document.getElementById('craftContainer');
             
             const { data, error } = await supabase
                 .from('concepts')
@@ -371,18 +505,18 @@
             }
             
             container.innerHTML = data.map(c => `
-                <div class="phrase-card" onclick="navigator.clipboard.writeText('${escapeHtml(c.body)}')">
-                    <div class="phrase-text">${escapeHtml(c.body)}</div>
-                    <div class="phrase-meta">
+                <div class="craft-card" onclick="navigator.clipboard.writeText('${escapeHtml(c.body)}')">
+                    <div class="craft-text">${escapeHtml(c.body)}</div>
+                    <div class="craft-meta">
                         <span>🔥 ${c.score}%</span>
                         <span>📝 ${c.metadata?.word_count || '?'} words</span>
-                        <span>⚒️ ${new Date(c.created_at).toLocaleDateString()}</span>
+                        <span>🔨 ${new Date(c.created_at).toLocaleDateString()}</span>
                     </div>
                 </div>
             `).join('');
         }
         
-        async function clearHephaestusConcepts() {
+        async function clearHephaestusCrafts() {
             const { error } = await supabase
                 .from('concepts')
                 .delete()
@@ -391,10 +525,26 @@
             if (error) {
                 addLog(`Clear failed: ${error.message}`, 'error');
             } else {
-                addLog('🗑️ All Hephaestus concepts cleared', 'success');
-                await displayHephaestusConcepts();
+                addLog('🗑️ All Hephaestus crafts cleared', 'success');
+                await displayHephaestusCrafts();
                 await updateStats();
             }
+        }
+        
+        async function displayHermesSignals() {
+            const { nouns, verbs, adjs, total } = await loadHermesReflexes(12);
+            
+            if (total === 0) {
+                document.getElementById('hermesSignals').innerHTML = '<span style="color:#3a3a4a;">No Hermes reflexes yet. Run Hermes scraper.</span>';
+                return;
+            }
+            
+            const topSignals = [...nouns, ...verbs, ...adjs].slice(0, 12);
+            const html = topSignals.map(s => 
+                `<span class="signal-badge" onclick="document.getElementById('craftInput').value += '${escapeHtml(s.body)} '; updateWordCount();">${escapeHtml(s.body)}</span>`
+            ).join('');
+            
+            document.getElementById('hermesSignals').innerHTML = html;
         }
         
         // ============================================
@@ -437,7 +587,7 @@
                 : 0;
             
             document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card"><div class="stat-number">${hermesCount || 0}</div><div class="stat-label">Hermes Signals</div></div>
+                <div class="stat-card"><div class="stat-number">${hermesCount || 0}</div><div class="stat-label">Hermes Reflexes</div></div>
                 <div class="stat-card"><div class="stat-number">${hephaestusCount || 0}</div><div class="stat-label">Hephaestus Crafts</div></div>
                 <div class="stat-card"><div class="stat-number">${avgScore}</div><div class="stat-label">Avg Craft Score</div></div>
                 <div class="stat-card"><div class="stat-number">${BAND_CONFIG.minWords}–${BAND_CONFIG.maxWords}</div><div class="stat-label">Word Range</div></div>
@@ -453,7 +603,7 @@
             }
             
             const wordCount = input.split(/\s+/).length;
-            addLog(`🔨 Processing manual craft: "${input.substring(0, 60)}..." (${wordCount} words)`, 'info');
+            addLog(`🔨 Processing manual craft: "${input.substring(0, 60)}" (${wordCount} words)`, 'info');
             
             const result = await hephaestusGate.process({
                 body: input,
@@ -465,7 +615,7 @@
             if (result.success) {
                 addLog(`✅ Craft accepted. ID: ${result.id.substring(0,8)}... Score: ${result.score}%`, 'success');
                 document.getElementById('craftInput').value = '';
-                await displayHephaestusConcepts();
+                await displayHephaestusCrafts();
                 await updateStats();
             } else {
                 addLog(`❌ Rejected: ${result.error}`, 'error');
@@ -486,19 +636,20 @@
                 wordCountElem.textContent += ' ⚠️ Exceeds Hephaestus range';
             } else if (wordCount > 0 && wordCount < BAND_CONFIG.minWords) {
                 wordCountElem.className = 'word-count invalid';
-                wordCountElem.textContent += ' ⚠️ Below Hephaestus range (needs more craft)';
+                wordCountElem.textContent += ' ⚠️ Needs more craft (min 4 words)';
             } else {
                 wordCountElem.className = 'word-count';
             }
         }
         
         async function checkHermes() {
-            const { nouns, verbs, adjs, total } = await loadHermesSignals();
-            addLog(`🔍 Hermes has ${total} active signals (${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives)`, total > 0 ? 'success' : 'warning');
+            const { nouns, verbs, adjs, total } = await loadHermesReflexes();
+            addLog(`🔍 Hermes has ${total} active reflexes (${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives)`, total > 0 ? 'success' : 'warning');
+            await displayHermesSignals();
             
             if (total === 0) {
-                addLog('⚠️ Run Hermes scraper first to generate source signals.', 'warning');
-            } else if (nouns.length < 3) {
+                addLog('⚠️ Run Hermes scraper first to generate source reflexes.', 'warning');
+            } else if (nouns.length < 2) {
                 addLog(`⚠️ Low noun count (${nouns.length}). Forge may produce simple results.`, 'warning');
             }
         }
@@ -520,7 +671,8 @@
             hephaestusGate = new HephaestusGate(supabase);
             
             await updateStats();
-            await displayHephaestusConcepts();
+            await displayHephaestusCrafts();
+            await displayHermesSignals();
             
             // Event listeners
             document.getElementById('submitBtn').addEventListener('click', handleManualCraft);
@@ -530,11 +682,11 @@
                 addLog('Cleared input field.', 'info');
             });
             document.getElementById('checkHermesBtn').addEventListener('click', checkHermes);
-            document.getElementById('forgeFromHermesBtn').addEventListener('click', forgePhrasesFromHermes);
-            document.getElementById('clearPhrasesBtn').addEventListener('click', clearHephaestusConcepts);
+            document.getElementById('forgeFromHermesBtn').addEventListener('click', forgeCraftsFromHermes);
+            document.getElementById('clearCraftsBtn').addEventListener('click', clearHephaestusCrafts);
             document.getElementById('craftInput').addEventListener('input', updateWordCount);
             
-            addLog(`🔥 Hephaestus Gate operational. ${BAND_CONFIG.frequency} · ${BAND_CONFIG.color} · Accepting ${BAND_CONFIG.minWords}-${BAND_CONFIG.maxWords} word crafts.`, 'success');
+            addLog(`🔥 Hephaestus Gate operational. ${BAND_CONFIG.frequency} · ${BAND_CONFIG.color} · Forging ${BAND_CONFIG.minWords}-${BAND_CONFIG.maxWords} word crafts.`, 'success');
         }
         
         init();

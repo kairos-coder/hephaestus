@@ -3,556 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Hephaestus Gate · 2–4 Hz · Orange Band</title>
+    <title>🔥 Hephaestus · Two-Stage Builder</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            background: #0a0c12; 
-            font-family: 'Courier New', monospace; 
-            padding: 2rem; 
-            color: #d4e0ed;
-        }
+        body { background: #0a0c12; font-family: 'Courier New', monospace; padding: 2rem; color: #d4e0ed; }
         .container { max-width: 1400px; margin: 0 auto; }
-        
-        .header { 
-            border-left: 4px solid #e07040; 
-            padding-left: 1rem; 
-            margin-bottom: 2rem;
-        }
-        h1 { font-size: 2rem; color: #e07040; letter-spacing: -1px; }
-        .sub { color: #6a7a8a; font-size: 0.8rem; margin-top: 0.25rem; }
-        .frequency { color: #e07040; }
-        
-        .panel { 
-            background: #0b0e16; 
-            border: 1px solid #1e2535; 
-            border-radius: 0.5rem; 
-            padding: 1.5rem; 
-            margin-bottom: 1.5rem;
-        }
-        .panel-title {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #6a7a8a;
-            margin-bottom: 1rem;
-        }
-        
-        .input-area {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-direction: column;
-        }
-        textarea {
-            background: #060810;
-            border: 1px solid #1e2535;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            color: #d4e0ed;
-            font-family: monospace;
-            font-size: 0.9rem;
-            resize: vertical;
-            width: 100%;
-        }
-        textarea:focus {
-            outline: none;
-            border-color: #e07040;
-        }
-        
-        button {
-            background: #1e2535;
-            border: none;
-            color: #d4e0ed;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: monospace;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-        button:hover {
-            background: #e07040;
-            color: #0a0c12;
-        }
-        button.primary {
-            background: #e07040;
-            color: #0a0c12;
-        }
-        button.primary:hover {
-            background: #f08050;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .stat-card {
-            background: #0f141e;
-            border: 1px solid #1e2535;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            text-align: center;
-        }
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #e07040;
-        }
-        .stat-label {
-            font-size: 0.7rem;
-            color: #6a7a8a;
-            margin-top: 0.25rem;
-        }
-        
-        .craft-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-        .craft-card {
-            background: #0f141e;
-            border: 1px solid #1e2535;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .craft-card:hover {
-            background: #1a1f2a;
-            border-color: #e07040;
-        }
-        .craft-text {
-            font-size: 0.85rem;
-            color: #d4e0ed;
-        }
-        .craft-meta {
-            font-size: 0.65rem;
-            color: #e07040;
-            margin-top: 0.5rem;
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .log-area {
-            background: #060810;
-            border: 1px solid #1e2535;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            max-height: 300px;
-            overflow-y: auto;
-            font-size: 0.75rem;
-        }
-        .log-entry {
-            padding: 0.25rem 0;
-            border-bottom: 1px solid #1a1f2a;
-            color: #6a7a8a;
-        }
+        .header { border-left: 4px solid #e07040; padding-left: 1rem; margin-bottom: 2rem; }
+        h1 { font-size: 2rem; color: #e07040; }
+        .sub { color: #6a7a8a; font-size: 0.8rem; }
+        .panel { background: #0b0e16; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .panel-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: #6a7a8a; margin-bottom: 1rem; }
+        button { background: #1e2535; border: none; color: #d4e0ed; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-right: 0.5rem; }
+        button:hover { background: #e07040; color: #0a0c12; }
+        button.primary { background: #e07040; color: #0a0c12; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: #0f141e; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 0.75rem; text-align: center; }
+        .stat-number { font-size: 1.5rem; font-weight: bold; color: #e07040; }
+        .stat-label { font-size: 0.7rem; color: #6a7a8a; }
+        .log-area { background: #060810; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; font-size: 0.75rem; }
+        .log-entry { padding: 0.25rem 0; border-bottom: 1px solid #1a1f2a; color: #6a7a8a; }
         .log-entry.success { color: #6b8e23; }
         .log-entry.error { color: #cd5c5c; }
-        .log-entry.warning { color: #e07040; }
-        
-        .word-count {
-            font-size: 0.7rem;
-            margin-top: 0.5rem;
-            text-align: right;
-        }
-        .word-count.valid { color: #6b8e23; }
-        .word-count.invalid { color: #cd5c5c; }
-        
-        .signal-badge {
-            display: inline-block;
-            background: #1e2535;
-            border-radius: 4px;
-            padding: 0.2rem 0.5rem;
-            margin: 0.2rem;
-            font-size: 0.7rem;
-            cursor: pointer;
-        }
-        .signal-badge:hover {
-            background: #e07040;
-            color: #0a0c12;
-        }
+        .status-step { padding: 0.25rem 0; border-left: 2px solid #1e2535; padding-left: 0.75rem; margin: 0.25rem 0; font-size: 0.75rem; }
+        .status-step.complete { border-left-color: #6b8e23; color: #6b8e23; }
+        .status-step.running { border-left-color: #e07040; color: #e07040; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>🔥 HEPHAESTUS GATE</h1>
-        <div class="sub">CRAFT · CONSTRUCTION · PRECISION · <span class="frequency">2–4 Hz (Theta/Orange Band)</span></div>
-        <div class="sub">Accepts 4–8 words · Forges crafts from Hermes reflexes · Expires in 7 days</div>
+        <h1>🔥 HEPHAESTUS · TWO-STAGE BUILDER</h1>
+        <div class="sub">Stage 1: Reflexes → Crafts (4-8 words) | Stage 2: Crafts → Constructs (9-15 words)</div>
     </div>
 
     <div class="stats-grid" id="statsGrid"></div>
 
     <div class="panel">
-        <div class="panel-title">🔨 MANUAL CRAFT · ENTER PHRASE (4–8 WORDS)</div>
-        <div class="input-area">
-            <textarea id="craftInput" rows="3" placeholder="Enter a crafted phrase (4–8 words)&#10;&#10;Examples:&#10;• the resonance cascade emerges&#10;• neural nets align at the frontier&#10;• deep flow through quantum foam"></textarea>
+        <div class="panel-title">🏭 BUILD PIPELINE</div>
+        <button id="runHermesBtn" class="primary">⚡ Stage 0: Scrape Hermes Reflexes</button>
+        <button id="stage1Btn" class="primary">🔥 Stage 1: Forge Crafts (4-8 words)</button>
+        <button id="stage2Btn" class="primary">🔨 Stage 2: Forge Constructs → Demeter (9-15 words)</button>
+        <button id="runAllBtn">🏭 Run Full Pipeline</button>
+        <button id="clearBtn">🗑️ Clear Hephaestus & Demeter</button>
+        
+        <div id="status" style="margin-top: 1rem;">
+            <div class="status-step pending">⚡ Hermes Reflexes: Waiting</div>
+            <div class="status-step pending">🔥 Stage 1 Crafts: Waiting</div>
+            <div class="status-step pending">🔨 Stage 2 Constructs: Waiting</div>
         </div>
-        <button id="submitBtn" class="primary">🔨 Forge Concept</button>
-        <button id="clearInputBtn">Clear</button>
-        <div class="word-count" id="wordCount">0 / 4–8 words</div>
     </div>
 
     <div class="panel">
-        <div class="panel-title">🏗️ FORGE FROM HERMES REFLEXES</div>
-        <button id="checkHermesBtn">🔍 Check Hermes Reflexes</button>
-        <button id="forgeFromHermesBtn">⚒️ Forge Crafts from Hermes</button>
-        <button id="clearCraftsBtn">🗑️ Clear All Crafts</button>
-        
-        <div style="margin-top: 1rem;">
-            <div class="panel-title" style="margin-bottom: 0.5rem;">📡 RECENT HERMES REFLEXES</div>
-            <div id="hermesSignals" style="font-size: 0.7rem;"></div>
-        </div>
-        
-        <div id="craftContainer" class="craft-grid" style="margin-top: 1rem;"></div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-title">📋 GATE LOG</div>
+        <div class="panel-title">📋 LOG</div>
         <div id="ingestLog" class="log-area">
-            <div class="log-entry">🔥 Hephaestus Gate operational. 2–4 Hz · Orange · Forging 4–8 word crafts.</div>
+            <div class="log-entry">🔥 Hephaestus ready. Run pipeline to build concepts.</div>
         </div>
     </div>
 </div>
 
 <script>
     (function() {
-        // ============================================
-        // CONFIGURATION
-        // ============================================
         const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
-        
-        const BAND_CONFIG = {
-            name: 'hephaestus',
-            minWords: 4,
-            maxWords: 8,
-            expiryDays: 7,
-            frequency: '2–4 Hz',
-            color: 'Orange'
-        };
-        
-        // Craft patterns for forging from Hermes reflexes
-        const PATTERNS = [
-            "{noun} {verb}",
-            "{adj} {noun}",
-            "{noun} of {noun}",
-            "{noun} {verb} {noun}",
-            "the {adj} {noun} {verb}",
-            "{noun} and {noun}",
-            "{verb} the {noun}",
-            "when {noun} {verb}"
-        ];
-        
-        // ============================================
-        // HEPHAESTUS GATE CLASS
-        // ============================================
-        class HephaestusGate {
-            constructor(supabaseClient) {
-                this.supabase = supabaseClient;
-                this.band = BAND_CONFIG.name;
-                this.minWords = BAND_CONFIG.minWords;
-                this.maxWords = BAND_CONFIG.maxWords;
-                this.expiryDays = BAND_CONFIG.expiryDays;
-            }
-            
-            _countWords(str) {
-                return str.trim().split(/\s+/).filter(w => w.length > 0).length;
-            }
-            
-            async _isDuplicate(body, source, hours = 48) {
-                const cutoff = new Date();
-                cutoff.setHours(cutoff.getHours() - hours);
-                
-                const { data, error } = await this.supabase
-                    .from('concepts')
-                    .select('id')
-                    .eq('body', body.toLowerCase().trim())
-                    .eq('source', source)
-                    .gte('created_at', cutoff.toISOString())
-                    .limit(1);
-                
-                if (error) return false;
-                return data && data.length > 0;
-            }
-            
-            _calculateCraftScore(body, sourceWords = []) {
-                const wordCount = this._countWords(body);
-                
-                // Perfect length bonus (6 words is ideal craft)
-                const lengthIdeal = Math.abs(wordCount - 6);
-                const lengthScore = Math.max(0, 30 - (lengthIdeal * 3));
-                
-                // Lexical diversity
-                const words = body.toLowerCase().match(/\b\w+\b/g) || [];
-                const uniqueWords = new Set(words);
-                const diversity = uniqueWords.size / words.length;
-                const diversityScore = diversity * 30;
-                
-                // Source word integration (if forged from Hermes)
-                const sourceBonus = sourceWords.length > 0 ? Math.min(20, sourceWords.length * 4) : 0;
-                
-                return Math.min(100, Math.round(lengthScore + diversityScore + sourceBonus + 20));
-            }
-            
-            _extractMetadata(body) {
-                const words = body.toLowerCase().match(/\b\w+\b/g) || [];
-                const uniqueWords = new Set(words);
-                
-                return {
-                    word_count: words.length,
-                    unique_word_count: uniqueWords.size,
-                    lexical_diversity: parseFloat((uniqueWords.size / words.length).toFixed(3)),
-                    crafted_at: new Date().toISOString()
-                };
-            }
-            
-            async process(raw) {
-                // 1. Validate word count
-                const wordCount = this._countWords(raw.body);
-                if (wordCount < this.minWords || wordCount > this.maxWords) {
-                    return {
-                        success: false,
-                        error: `Hephaestus accepts ${this.minWords}-${this.maxWords} words. Received ${wordCount}.`
-                    };
-                }
-                
-                // 2. Check for duplicate
-                const isDuplicate = await this._isDuplicate(raw.body, raw.source);
-                if (isDuplicate) {
-                    return {
-                        success: false,
-                        error: `Duplicate craft "${raw.body.substring(0, 50)}..." from ${raw.source}`
-                    };
-                }
-                
-                // 3. Prepare record
-                const expiresAt = new Date();
-                expiresAt.setDate(expiresAt.getDate() + this.expiryDays);
-                
-                const craftScore = raw.score || this._calculateCraftScore(raw.body, raw.sourceWords || []);
-                const metadata = this._extractMetadata(raw.body);
-                
-                const record = {
-                    body: raw.body.toLowerCase().trim(),
-                    band: this.band,
-                    source: raw.source,
-                    score: craftScore,
-                    word_type: 'concept',
-                    metadata: {
-                        ...metadata,
-                        source_words: raw.sourceWords || [],
-                        pattern_used: raw.pattern || 'manual',
-                        ...raw.metadata
-                    },
-                    expires_at: expiresAt.toISOString(),
-                    created_at: new Date().toISOString(),
-                    processed_at: null,
-                    routed_to_band: null
-                };
-                
-                // 4. Insert into concepts table
-                const { data, error } = await this.supabase
-                    .from('concepts')
-                    .insert(record)
-                    .select()
-                    .single();
-                
-                if (error) {
-                    return { success: false, error: error.message };
-                }
-                
-                return { success: true, id: data.id, score: craftScore, wordCount: wordCount };
-            }
-            
-            async processBatch(items) {
-                const results = [];
-                for (const item of items) {
-                    const result = await this.process(item);
-                    results.push(result);
-                }
-                return results;
-            }
-        }
-        
-        // ============================================
-        // FORGE FROM HERMES REFLEXES
-        // ============================================
-        async function loadHermesReflexes(limit = 50) {
-            const { data, error } = await supabase
-                .from('concepts')
-                .select('body, word_type, score, metadata')
-                .eq('band', 'hermes')
-                .gte('expires_at', new Date().toISOString())
-                .limit(limit);
-            
-            if (error) {
-                addLog(`Error loading Hermes reflexes: ${error.message}`, 'error');
-                return { nouns: [], verbs: [], adjs: [], reflexes: [], total: 0 };
-            }
-            
-            const nouns = data.filter(w => w.word_type === 'noun' || w.word_type === 'signal');
-            const verbs = data.filter(w => w.word_type === 'verb');
-            const adjs = data.filter(w => w.word_type === 'adj');
-            
-            return { nouns, verbs, adjs, reflexes: data, total: data.length };
-        }
-        
-        async function forgeCraftsFromHermes() {
-            addLog('🔥 Forging crafts from Hermes reflexes...', 'info');
-            
-            const { nouns, verbs, adjs, total, reflexes } = await loadHermesReflexes();
-            
-            if (total === 0) {
-                addLog('❌ No Hermes reflexes found. Run Hermes scraper first.', 'error');
-                return;
-            }
-            
-            addLog(`📊 Loaded ${total} Hermes reflexes (${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives)`, 'info');
-            
-            if (nouns.length < 2) {
-                addLog(`⚠️ Need at least 2 nouns (have ${nouns.length}). Forging with what's available.`, 'warning');
-            }
-            
-            const forgedCrafts = [];
-            const usedPhrases = new Set();
-            
-            // Forge up to 15 crafts
-            for (let i = 0; i < 15; i++) {
-                const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
-                
-                const noun1 = nouns[Math.floor(Math.random() * nouns.length)] || { body: 'system', score: 50 };
-                const noun2 = nouns[Math.floor(Math.random() * nouns.length)] || { body: 'process', score: 50 };
-                const verb = verbs.length ? verbs[Math.floor(Math.random() * verbs.length)] : { body: 'emerges', score: 50 };
-                const adj = adjs.length ? adjs[Math.floor(Math.random() * adjs.length)] : { body: 'dynamic', score: 50 };
-                
-                let craft = pattern.template;
-                craft = craft.replace('{noun}', noun1.body);
-                craft = craft.replace(/{noun}/g, noun2.body);
-                craft = craft.replace('{verb}', verb.body);
-                craft = craft.replace('{adj}', adj.body);
-                craft = craft.charAt(0).toUpperCase() + craft.slice(1);
-                
-                // Ensure craft is within 4-8 words
-                let wordCount = craft.split(/\s+/).length;
-                if (wordCount < 4) {
-                    craft = `${craft} ${noun1.body} ${verb.body}`;
-                } else if (wordCount > 8) {
-                    craft = craft.split(/\s+/).slice(0, 8).join(' ');
-                }
-                
-                const craftKey = craft.toLowerCase();
-                if (usedPhrases.has(craftKey)) continue;
-                usedPhrases.add(craftKey);
-                
-                // Calculate score based on source reflexes
-                const avgScore = (noun1.score + noun2.score + verb.score + adj.score) / 4;
-                const craftScore = Math.min(100, Math.round(avgScore * 0.6 + 30));
-                
-                forgedCrafts.push({
-                    body: craft,
-                    source: 'forge',
-                    score: craftScore,
-                    pattern: pattern.template,
-                    sourceWords: [noun1.body, noun2.body, verb.body, adj.body].filter(Boolean)
-                });
-            }
-            
-            // Save to database via Hephaestus gate
-            let saved = 0;
-            for (const craft of forgedCrafts) {
-                const result = await hephaestusGate.process({
-                    body: craft.body,
-                    source: craft.source,
-                    score: craft.score,
-                    pattern: craft.pattern,
-                    sourceWords: craft.sourceWords,
-                    metadata: { forged: true, timestamp: Date.now() }
-                });
-                
-                if (result.success) saved++;
-            }
-            
-            addLog(`✅ Forged and saved ${saved} crafts to Hephaestus band`, 'success');
-            await displayHephaestusCrafts();
-            await updateStats();
-        }
-        
-        async function displayHephaestusCrafts() {
-            const container = document.getElementById('craftContainer');
-            
-            const { data, error } = await supabase
-                .from('concepts')
-                .select('body, score, metadata, created_at')
-                .eq('band', 'hephaestus')
-                .order('created_at', { ascending: false })
-                .limit(20);
-            
-            if (error) {
-                container.innerHTML = `<div class="log-entry">Error: ${error.message}</div>`;
-                return;
-            }
-            
-            if (!data || data.length === 0) {
-                container.innerHTML = '<div class="log-entry">No crafted concepts yet. Forge from Hermes or enter manually.</div>';
-                return;
-            }
-            
-            container.innerHTML = data.map(c => `
-                <div class="craft-card" onclick="navigator.clipboard.writeText('${escapeHtml(c.body)}')">
-                    <div class="craft-text">${escapeHtml(c.body)}</div>
-                    <div class="craft-meta">
-                        <span>🔥 ${c.score}%</span>
-                        <span>📝 ${c.metadata?.word_count || '?'} words</span>
-                        <span>🔨 ${new Date(c.created_at).toLocaleDateString()}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        async function clearHephaestusCrafts() {
-            const { error } = await supabase
-                .from('concepts')
-                .delete()
-                .eq('band', 'hephaestus');
-            
-            if (error) {
-                addLog(`Clear failed: ${error.message}`, 'error');
-            } else {
-                addLog('🗑️ All Hephaestus crafts cleared', 'success');
-                await displayHephaestusCrafts();
-                await updateStats();
-            }
-        }
-        
-        async function displayHermesSignals() {
-            const { nouns, verbs, adjs, total } = await loadHermesReflexes(12);
-            
-            if (total === 0) {
-                document.getElementById('hermesSignals').innerHTML = '<span style="color:#3a3a4a;">No Hermes reflexes yet. Run Hermes scraper.</span>';
-                return;
-            }
-            
-            const topSignals = [...nouns, ...verbs, ...adjs].slice(0, 12);
-            const html = topSignals.map(s => 
-                `<span class="signal-badge" onclick="document.getElementById('craftInput').value += '${escapeHtml(s.body)} '; updateWordCount();">${escapeHtml(s.body)}</span>`
-            ).join('');
-            
-            document.getElementById('hermesSignals').innerHTML = html;
-        }
-        
-        // ============================================
-        // UI HELPERS
-        // ============================================
         let supabase = null;
-        let hephaestusGate = null;
-        
+
         function addLog(msg, type = 'info') {
             const log = document.getElementById('ingestLog');
             const entry = document.createElement('div');
@@ -561,132 +76,270 @@
             log.appendChild(entry);
             entry.scrollIntoView({ behavior: 'smooth' });
         }
-        
+
+        function updateStatus(step, status) {
+            const steps = { hermes: 0, stage1: 1, stage2: 2 };
+            const icons = { hermes: '⚡', stage1: '🔥', stage2: '🔨' };
+            const names = { hermes: 'Hermes Reflexes', stage1: 'Stage 1 Crafts', stage2: 'Stage 2 Constructs' };
+            const statusClass = status === 'complete' ? 'complete' : status === 'running' ? 'running' : 'pending';
+            const statusText = status === 'complete' ? 'Complete' : status === 'running' ? 'Running...' : 'Waiting';
+            
+            const divs = document.querySelectorAll('.status-step');
+            if (divs[steps[step]]) {
+                divs[steps[step]].className = `status-step ${statusClass}`;
+                divs[steps[step]].innerHTML = `${icons[step]} ${names[step]}: ${statusText}`;
+            }
+        }
+
         async function updateStats() {
-            // Get Hermes count
-            const { count: hermesCount } = await supabase
-                .from('concepts')
-                .select('*', { count: 'exact', head: true })
-                .eq('band', 'hermes');
-            
-            // Get Hephaestus count
-            const { count: hephaestusCount } = await supabase
-                .from('concepts')
-                .select('*', { count: 'exact', head: true })
-                .eq('band', 'hephaestus');
-            
-            // Get average craft score
-            const { data: scores } = await supabase
-                .from('concepts')
-                .select('score')
-                .eq('band', 'hephaestus')
-                .limit(100);
-            
-            const avgScore = scores && scores.length > 0 
-                ? Math.round(scores.reduce((sum, s) => sum + (s.score || 0), 0) / scores.length)
-                : 0;
+            const { count: reflexes } = await supabase.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'hermes');
+            const { count: crafts } = await supabase.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'hephaestus');
+            const { count: constructs } = await supabase.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'demeter');
             
             document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card"><div class="stat-number">${hermesCount || 0}</div><div class="stat-label">Hermes Reflexes</div></div>
-                <div class="stat-card"><div class="stat-number">${hephaestusCount || 0}</div><div class="stat-label">Hephaestus Crafts</div></div>
-                <div class="stat-card"><div class="stat-number">${avgScore}</div><div class="stat-label">Avg Craft Score</div></div>
-                <div class="stat-card"><div class="stat-number">${BAND_CONFIG.minWords}–${BAND_CONFIG.maxWords}</div><div class="stat-label">Word Range</div></div>
-                <div class="stat-card"><div class="stat-number">${BAND_CONFIG.expiryDays}</div><div class="stat-label">Days to Expiry</div></div>
+                <div class="stat-card"><div class="stat-number">${reflexes || 0}</div><div class="stat-label">Hermes Reflexes (1-3)</div></div>
+                <div class="stat-card"><div class="stat-number">${crafts || 0}</div><div class="stat-label">Hephaestus Crafts (4-8)</div></div>
+                <div class="stat-card"><div class="stat-number">${constructs || 0}</div><div class="stat-label">Demeter Constructs (9-15)</div></div>
             `;
         }
-        
-        async function handleManualCraft() {
-            const input = document.getElementById('craftInput').value.trim();
-            if (!input) {
-                addLog('Please enter a crafted phrase.', 'warning');
-                return;
-            }
-            
-            const wordCount = input.split(/\s+/).length;
-            addLog(`🔨 Processing manual craft: "${input.substring(0, 60)}" (${wordCount} words)`, 'info');
-            
-            const result = await hephaestusGate.process({
-                body: input,
-                source: 'terminal',
-                score: null,
-                metadata: { crafted_by: 'user' }
-            });
-            
-            if (result.success) {
-                addLog(`✅ Craft accepted. ID: ${result.id.substring(0,8)}... Score: ${result.score}%`, 'success');
-                document.getElementById('craftInput').value = '';
-                await displayHephaestusCrafts();
-                await updateStats();
-            } else {
-                addLog(`❌ Rejected: ${result.error}`, 'error');
-            }
-        }
-        
-        function updateWordCount() {
-            const input = document.getElementById('craftInput').value;
-            const wordCount = input.trim().split(/\s+/).filter(w => w.length > 0).length;
-            const wordCountElem = document.getElementById('wordCount');
-            wordCountElem.textContent = `${wordCount} / ${BAND_CONFIG.minWords}–${BAND_CONFIG.maxWords} words`;
-            
-            if (wordCount >= BAND_CONFIG.minWords && wordCount <= BAND_CONFIG.maxWords) {
-                wordCountElem.className = 'word-count valid';
-                wordCountElem.textContent += ' ✓';
-            } else if (wordCount > BAND_CONFIG.maxWords) {
-                wordCountElem.className = 'word-count invalid';
-                wordCountElem.textContent += ' ⚠️ Exceeds Hephaestus range';
-            } else if (wordCount > 0 && wordCount < BAND_CONFIG.minWords) {
-                wordCountElem.className = 'word-count invalid';
-                wordCountElem.textContent += ' ⚠️ Needs more craft (min 4 words)';
-            } else {
-                wordCountElem.className = 'word-count';
-            }
-        }
-        
-        async function checkHermes() {
-            const { nouns, verbs, adjs, total } = await loadHermesReflexes();
-            addLog(`🔍 Hermes has ${total} active reflexes (${nouns.length} nouns, ${verbs.length} verbs, ${adjs.length} adjectives)`, total > 0 ? 'success' : 'warning');
-            await displayHermesSignals();
-            
-            if (total === 0) {
-                addLog('⚠️ Run Hermes scraper first to generate source reflexes.', 'warning');
-            } else if (nouns.length < 2) {
-                addLog(`⚠️ Low noun count (${nouns.length}). Forge may produce simple results.`, 'warning');
-            }
-        }
-        
-        function escapeHtml(str) {
-            return String(str).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-        }
-        
+
         // ============================================
-        // INITIALIZATION
+        // STAGE 0: HERMES SCRAPE
         // ============================================
-        async function init() {
-            if (!window.supabase) {
-                addLog('❌ Supabase failed to load', 'error');
-                return;
+        async function runHermes() {
+            addLog('⚡ Scraping Hermes reflexes...', 'info');
+            updateStatus('hermes', 'running');
+            
+            const STOPWORDS = new Set(['the','and','for','with','this','that','from','have','are','was','were','how','why','what','when','where','who','which','there','their','they','them','then','than','about','into','through','during','before','after','above','below','between','under','very','just','but','not','you','your','our','its','has','had','been','being','can','will','would','could','should','might','like','because','after','while','since']);
+            const PRIORITY = new Set(['ai','ml','api','data','cloud','native','scalable','async','pipeline','workflow','automation','frontier','alignment','resonance','collapse','emergence','paradox','recursion','entropy','fractal','quantum','neural','vector','embedding','inference','latency','throughput','semantic','intelligence']);
+            
+            function extractTokens(text) {
+                return text.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => w.length >= 4 && w.length <= 12 && !STOPWORDS.has(w));
+            }
+            function scoreWord(word, freq) {
+                let s = Math.min(80, freq * 6);
+                if (PRIORITY.has(word)) s += 30;
+                if (word.length >= 6 && word.length <= 10) s += 10;
+                return Math.min(100, s);
             }
             
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            hephaestusGate = new HephaestusGate(supabase);
+            async function fetchReddit() {
+                try {
+                    const res = await fetch('https://www.reddit.com/r/all/top.json?limit=50&t=day');
+                    const data = await res.json();
+                    const tokens = data.data.children.map(c => c.data.title).flatMap(t => extractTokens(t));
+                    const freq = new Map(); tokens.forEach(t => freq.set(t, (freq.get(t)||0)+1));
+                    return Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([w,c]) => ({body:w, source:'reddit', score:scoreWord(w,c)}));
+                } catch(e) { return []; }
+            }
+            async function fetchHN() {
+                try {
+                    const ids = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json').then(r=>r.json());
+                    const stories = await Promise.all(ids.slice(0,30).map(async id => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(r=>r.json())));
+                    const tokens = stories.filter(s=>s&&s.title).map(s=>s.title).flatMap(t=>extractTokens(t));
+                    const freq = new Map(); tokens.forEach(t=>freq.set(t,(freq.get(t)||0)+1));
+                    return Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([w,c])=>({body:w, source:'hn', score:scoreWord(w,c)}));
+                } catch(e) { return []; }
+            }
+            async function fetchGitHub() {
+                try {
+                    const date = new Date(); date.setDate(date.getDate()-7);
+                    const res = await fetch(`https://api.github.com/search/repositories?q=created:>${date.toISOString().split('T')[0]}&sort=stars&order=desc&per_page=30`);
+                    const data = await res.json();
+                    const texts = data.items.flatMap(item=>[item.name, item.description].filter(Boolean));
+                    const tokens = texts.flatMap(t=>extractTokens(t));
+                    const freq = new Map(); tokens.forEach(t=>freq.set(t,(freq.get(t)||0)+1));
+                    let items = Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,15);
+                    if(items.length===0) items=[['api',1],['data',1],['cloud',1],['native',1],['scalable',1],['async',1]].map(([w,c])=>[w,c]);
+                    return items.map(([w,c])=>({body:w, source:'github', score:scoreWord(w,c)+15}));
+                } catch(e) { return []; }
+            }
             
+            const [reddit, hn, github] = await Promise.all([fetchReddit(), fetchHN(), fetchGitHub()]);
+            let saved = 0;
+            for (const c of [...reddit, ...hn, ...github]) {
+                const wc = c.body.split(/\s+/).length;
+                if(wc >= 1 && wc <= 3){
+                    const exp = new Date(); exp.setDate(exp.getDate()+3);
+                    const { error } = await supabase.from('concepts').insert({
+                        body: c.body.toLowerCase(), band: 'hermes', source: c.source, score: c.score,
+                        word_type: 'noun', metadata: {word_count: wc}, expires_at: exp.toISOString(), created_at: new Date().toISOString(),
+                        generation: 1, parent_ids: [], mutation_count: 0
+                    });
+                    if(!error) saved++;
+                }
+            }
+            addLog(`✅ Hermes: ${saved} reflexes`, saved>0?'success':'warning');
+            updateStatus('hermes', 'complete');
             await updateStats();
-            await displayHephaestusCrafts();
-            await displayHermesSignals();
+            return saved;
+        }
+
+        // ============================================
+        // STAGE 1: Combine reflexes → crafts (4-8 words)
+        // ============================================
+        async function runStage1() {
+            addLog('🔥 Stage 1: Forging crafts from reflexes...', 'info');
+            updateStatus('stage1', 'running');
             
-            // Event listeners
-            document.getElementById('submitBtn').addEventListener('click', handleManualCraft);
-            document.getElementById('clearInputBtn').addEventListener('click', () => {
-                document.getElementById('craftInput').value = '';
-                updateWordCount();
-                addLog('Cleared input field.', 'info');
-            });
-            document.getElementById('checkHermesBtn').addEventListener('click', checkHermes);
-            document.getElementById('forgeFromHermesBtn').addEventListener('click', forgeCraftsFromHermes);
-            document.getElementById('clearCraftsBtn').addEventListener('click', clearHephaestusCrafts);
-            document.getElementById('craftInput').addEventListener('input', updateWordCount);
+            const { data: reflexes } = await supabase
+                .from('concepts')
+                .select('id, body, score, generation')
+                .eq('band', 'hermes')
+                .order('score', { ascending: false })
+                .limit(30);
             
-            addLog(`🔥 Hephaestus Gate operational. ${BAND_CONFIG.frequency} · ${BAND_CONFIG.color} · Forging ${BAND_CONFIG.minWords}-${BAND_CONFIG.maxWords} word crafts.`, 'success');
+            if (!reflexes || reflexes.length < 2) {
+                addLog('⚠️ Need at least 2 reflexes', 'warning');
+                updateStatus('stage1', 'complete');
+                return 0;
+            }
+            
+            const patterns = [
+                (a,b) => `${a} ${b}`,
+                (a,b) => `${a} and ${b}`,
+                (a,b) => `the ${a} ${b}`,
+                (a,b) => `${a} of ${b}`,
+                (a,b) => `when ${a} ${b}`,
+                (a,b) => `${a} emerges from ${b}`,
+                (a,b) => `through ${a}, ${b}`,
+                (a,b) => `${a} becomes ${b}`
+            ];
+            
+            let saved = 0;
+            const used = new Set();
+            
+            for (let i = 0; i < 20; i++) {
+                const a = reflexes[Math.floor(Math.random() * reflexes.length)];
+                const b = reflexes[Math.floor(Math.random() * reflexes.length)];
+                const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+                let craft = pattern(a.body, b.body);
+                const wordCount = craft.split(/\s+/).length;
+                
+                if (wordCount >= 4 && wordCount <= 8 && !used.has(craft)) {
+                    used.add(craft);
+                    const exp = new Date(); exp.setDate(exp.getDate() + 7);
+                    const avgScore = Math.round((a.score + b.score) / 2) + 5;
+                    
+                    const { error } = await supabase.from('concepts').insert({
+                        body: craft.toLowerCase(),
+                        band: 'hephaestus',
+                        source: 'forge',
+                        score: Math.min(100, avgScore),
+                        word_type: 'craft',
+                        metadata: { word_count: wordCount, pattern_used: pattern },
+                        expires_at: exp.toISOString(),
+                        created_at: new Date().toISOString(),
+                        generation: Math.max(a.generation, b.generation) + 1,
+                        parent_ids: [a.id, b.id],
+                        mutation_count: 0
+                    });
+                    if (!error) saved++;
+                }
+            }
+            
+            addLog(`✅ Stage 1: ${saved} crafts forged`, saved > 0 ? 'success' : 'warning');
+            updateStatus('stage1', 'complete');
+            await updateStats();
+            return saved;
+        }
+
+        // ============================================
+        // STAGE 2: Combine crafts → constructs (9-15 words)
+        // Writes directly to band='demeter'
+        // ============================================
+        async function runStage2() {
+            addLog('🔨 Stage 2: Forging constructs from crafts → Demeter...', 'info');
+            updateStatus('stage2', 'running');
+            
+            const { data: crafts } = await supabase
+                .from('concepts')
+                .select('id, body, score, generation')
+                .eq('band', 'hephaestus')
+                .order('score', { ascending: false })
+                .limit(30);
+            
+            if (!crafts || crafts.length < 2) {
+                addLog('⚠️ Need at least 2 crafts', 'warning');
+                updateStatus('stage2', 'complete');
+                return 0;
+            }
+            
+            const templates = [
+                (a, b) => `${a} ${b} This combination reveals new structure.`,
+                (a, b) => `When ${a} and ${b} merge, a deeper pattern emerges.`,
+                (a, b) => `Through ${a}, ${b} transforms into higher order.`,
+                (a, b) => `${a} flows into ${b}, creating accumulated context.`,
+                (a, b) => `The synthesis of ${a} and ${b} grounds new understanding.`,
+                (a, b) => `${a} resonates with ${b}, forming a coherent field.`,
+                (a, b) => `As ${a} integrates with ${b}, the construct stabilizes.`
+            ];
+            
+            let saved = 0;
+            const used = new Set();
+            
+            for (let i = 0; i < 15; i++) {
+                const a = crafts[Math.floor(Math.random() * crafts.length)];
+                const b = crafts[Math.floor(Math.random() * crafts.length)];
+                const template = templates[Math.floor(Math.random() * templates.length)];
+                let construct = template(a.body, b.body);
+                construct = construct.charAt(0).toUpperCase() + construct.slice(1);
+                const wordCount = construct.split(/\s+/).length;
+                
+                if (wordCount >= 9 && wordCount <= 15 && !used.has(construct)) {
+                    used.add(construct);
+                    const exp = new Date(); exp.setDate(exp.getDate() + 14);
+                    const avgScore = Math.round((a.score + b.score) / 2) + 10;
+                    
+                    const { error } = await supabase.from('concepts').insert({
+                        body: construct.toLowerCase(),
+                        band: 'demeter',  // ← DIRECT TO DEMETER
+                        source: 'construct',
+                        score: Math.min(100, avgScore),
+                        word_type: 'construct',
+                        metadata: { word_count: wordCount, template_used: template },
+                        expires_at: exp.toISOString(),
+                        created_at: new Date().toISOString(),
+                        generation: Math.max(a.generation, b.generation) + 1,
+                        parent_ids: [a.id, b.id],
+                        mutation_count: 0
+                    });
+                    if (!error) saved++;
+                }
+            }
+            
+            addLog(`✅ Stage 2: ${saved} constructs sent to Demeter band`, saved > 0 ? 'success' : 'warning');
+            updateStatus('stage2', 'complete');
+            await updateStats();
+            return saved;
+        }
+
+        async function runFullPipeline() {
+            addLog('🏭 Running full build pipeline...', 'info');
+            await runHermes();
+            await runStage1();
+            await runStage2();
+            addLog('🏭 Pipeline complete!', 'success');
+        }
+
+        async function clearData() {
+            await supabase.from('concepts').delete().in('band', ['hephaestus', 'demeter']);
+            addLog('🗑️ Cleared Hephaestus and Demeter bands', 'success');
+            await updateStats();
+        }
+
+        async function init() {
+            if (!window.supabase) { addLog('Supabase failed to load', 'error'); return; }
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            await updateStats();
+            
+            document.getElementById('runHermesBtn').onclick = runHermes;
+            document.getElementById('stage1Btn').onclick = runStage1;
+            document.getElementById('stage2Btn').onclick = runStage2;
+            document.getElementById('runAllBtn').onclick = runFullPipeline;
+            document.getElementById('clearBtn').onclick = clearData;
+            
+            addLog('🔥 Hephaestus ready. Run pipeline to build concepts.', 'success');
         }
         
         init();

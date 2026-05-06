@@ -3,347 +3,1156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Hephaestus · Two-Stage Builder</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0a0c12; font-family: 'Courier New', monospace; padding: 2rem; color: #d4e0ed; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .header { border-left: 4px solid #e07040; padding-left: 1rem; margin-bottom: 2rem; }
-        h1 { font-size: 2rem; color: #e07040; }
-        .sub { color: #6a7a8a; font-size: 0.8rem; }
-        .panel { background: #0b0e16; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .panel-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: #6a7a8a; margin-bottom: 1rem; }
-        button { background: #1e2535; border: none; color: #d4e0ed; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-right: 0.5rem; }
-        button:hover { background: #e07040; color: #0a0c12; }
-        button.primary { background: #e07040; color: #0a0c12; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-        .stat-card { background: #0f141e; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 0.75rem; text-align: center; }
-        .stat-number { font-size: 1.5rem; font-weight: bold; color: #e07040; }
-        .stat-label { font-size: 0.7rem; color: #6a7a8a; }
-        .log-area { background: #060810; border: 1px solid #1e2535; border-radius: 0.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; font-size: 0.75rem; }
-        .log-entry { padding: 0.25rem 0; border-bottom: 1px solid #1a1f2a; color: #6a7a8a; }
-        .log-entry.success { color: #6b8e23; }
-        .log-entry.error { color: #cd5c5c; }
-        .status-step { padding: 0.25rem 0; border-left: 2px solid #1e2535; padding-left: 0.75rem; margin: 0.25rem 0; font-size: 0.75rem; }
-        .status-step.complete { border-left-color: #6b8e23; color: #6b8e23; }
-        .status-step.running { border-left-color: #e07040; color: #e07040; }
-    </style>
+    <title>🔨 Hephaestus · The Coherence Forge</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+        :root {
+            --ash:    #0e0c0a;
+            --coal:   #181410;
+            --ember:  #221a12;
+            --iron:   #2e2018;
+            --slag:   #3a2a18;
+            --forge:  #c07040;
+            --forge2: #e08840;
+            --heat:   #ff6020;
+            --glow:   #ffaa40;
+            --steel:  #8090a0;
+            --cold:   #4060a0;
+            --pass:   #407040;
+            --fail:   #803030;
+            --return: #604020;
+            --text:   #d0c0a8;
+            --muted:  #5a4a38;
+            --font-display: 'Cinzel', serif;
+            --font-body:    'Crimson Pro', serif;
+            --font-mono:    'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--ash);
+            color: var(--text);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 50% 100%, rgba(192,112,64,0.07) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 20% at 20% 80%, rgba(255,96,32,0.04) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Cinder particle effect */
+        .cinders {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .cinder {
+            position: absolute;
+            width: 2px; height: 2px;
+            border-radius: 50%;
+            background: var(--heat);
+            opacity: 0;
+            animation: rise linear infinite;
+        }
+        @keyframes rise {
+            0%   { opacity: 0; transform: translateY(0) scale(1); }
+            10%  { opacity: 0.8; }
+            90%  { opacity: 0.3; }
+            100% { opacity: 0; transform: translateY(-60vh) scale(0.2); }
+        }
+        @keyframes pulse  { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+        @keyframes spin   { to { transform: rotate(360deg); } }
+        @keyframes hammer { 0%,100% { transform: translateY(0) rotate(-10deg); } 50% { transform: translateY(4px) rotate(10deg); } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes flare  { 0%,100% { box-shadow: 0 0 8px var(--forge); } 50% { box-shadow: 0 0 20px var(--heat), 0 0 40px rgba(255,96,32,0.3); } }
+
+        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+        /* ── HEADER ── */
+        .header {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: end;
+            border-bottom: 1px solid var(--iron);
+            padding-bottom: 1.2rem;
+            margin-bottom: 1.8rem;
+            gap: 1rem;
+        }
+        .header h1 {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            color: var(--forge);
+            letter-spacing: 4px;
+        }
+        .header h1 span { color: var(--text); }
+        .header-sub {
+            font-family: var(--font-mono);
+            font-size: 0.5rem;
+            color: var(--muted);
+            letter-spacing: 2px;
+            margin-top: 0.3rem;
+        }
+        .telos-badge {
+            background: var(--ember);
+            border: 1px solid var(--iron);
+            border-left: 3px solid var(--forge);
+            border-radius: 6px;
+            padding: 0.6rem 0.9rem;
+            font-family: var(--font-body);
+            font-size: 0.7rem;
+            font-style: italic;
+            color: var(--text);
+            max-width: 320px;
+            line-height: 1.5;
+        }
+        .telos-label {
+            font-family: var(--font-mono);
+            font-size: 0.4rem;
+            letter-spacing: 2px;
+            color: var(--forge);
+            margin-bottom: 0.3rem;
+            font-style: normal;
+        }
+
+        /* ── STATS ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: var(--coal);
+            border: 1px solid var(--iron);
+            border-radius: 6px;
+            padding: 0.6rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+        .stat-val {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+        }
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 0.4rem;
+            color: var(--muted);
+            margin-top: 0.2rem;
+        }
+
+        /* ── PIPELINE STAGES ── */
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stage {
+            background: var(--coal);
+            border: 1px solid var(--iron);
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+            transition: border-color 0.3s;
+        }
+        .stage.active { border-color: var(--forge); animation: flare 2s infinite; }
+        .stage.done   { border-color: var(--pass); }
+        .stage.failed { border-color: var(--fail); }
+
+        .stage-num {
+            font-family: var(--font-display);
+            font-size: 0.45rem;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 0.4rem;
+        }
+        .stage-name {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            color: var(--forge);
+            margin-bottom: 0.3rem;
+        }
+        .stage-desc {
+            font-family: var(--font-mono);
+            font-size: 0.44rem;
+            color: var(--muted);
+            margin-bottom: 0.8rem;
+            line-height: 1.6;
+        }
+        .stage-counts {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.6rem;
+        }
+        .stage-count {
+            font-family: var(--font-mono);
+            font-size: 0.42rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            background: rgba(0,0,0,0.3);
+        }
+        .stage-count.pass  { color: var(--pass);   border: 1px solid rgba(64,112,64,0.3); }
+        .stage-count.fail  { color: var(--fail);   border: 1px solid rgba(128,48,48,0.3); }
+        .stage-count.queue { color: var(--forge);  border: 1px solid rgba(192,112,64,0.3); }
+
+        /* ── SVO GATE VISUALIZER ── */
+        .svo-gate {
+            background: var(--ember);
+            border: 1px solid var(--iron);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .svo-gate-title {
+            font-family: var(--font-mono);
+            font-size: 0.48rem;
+            letter-spacing: 2px;
+            color: var(--forge);
+            margin-bottom: 0.8rem;
+        }
+        .svo-display {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .svo-slot {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--iron);
+            border-radius: 6px;
+            padding: 0.6rem;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .svo-slot.filled  { border-color: var(--pass); background: rgba(64,112,64,0.1); }
+        .svo-slot.missing { border-color: var(--fail); background: rgba(128,48,48,0.1); animation: pulse 1s infinite; }
+        .svo-role {
+            font-family: var(--font-mono);
+            font-size: 0.38rem;
+            color: var(--muted);
+            letter-spacing: 2px;
+        }
+        .svo-word {
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-style: italic;
+            color: var(--text);
+            margin-top: 0.2rem;
+        }
+        .svo-arrow {
+            font-size: 1rem;
+            color: var(--muted);
+            text-align: center;
+        }
+        .svo-verdict {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            letter-spacing: 2px;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            margin-top: 0.6rem;
+            text-align: center;
+        }
+        .svo-verdict.pass { background: rgba(64,112,64,0.2); color: var(--pass); border: 1px solid var(--pass); }
+        .svo-verdict.fail { background: rgba(128,48,48,0.2); color: var(--fail); border: 1px solid var(--fail); }
+
+        /* ── FORGE FLOOR (concept cards) ── */
+        .forge-floor {
+            background: var(--coal);
+            border: 1px solid var(--iron);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .forge-floor-title {
+            font-family: var(--font-mono);
+            font-size: 0.48rem;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .concept-card {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--iron);
+            border-radius: 6px;
+            padding: 0.6rem;
+            animation: fadeUp 0.3s ease;
+            transition: border-color 0.2s;
+        }
+        .concept-card:hover { border-color: var(--slag); }
+        .concept-card.forged  { border-left: 3px solid var(--pass); }
+        .concept-card.returned { border-left: 3px solid var(--return); }
+        .concept-card.testing { border-left: 3px solid var(--forge); animation: pulse 1s infinite; }
+
+        .concept-body {
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            font-style: italic;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+        }
+        .concept-meta {
+            font-family: var(--font-mono);
+            font-size: 0.4rem;
+            color: var(--muted);
+        }
+        .concept-verdict {
+            font-family: var(--font-mono);
+            font-size: 0.38rem;
+            margin-top: 0.3rem;
+            padding: 0.15rem 0.3rem;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .concept-verdict.pass   { background: rgba(64,112,64,0.2);  color: var(--pass); }
+        .concept-verdict.fail   { background: rgba(128,48,48,0.2);  color: var(--fail); }
+        .concept-verdict.return { background: rgba(96,64,32,0.2);   color: var(--return); }
+
+        /* ── CONTROLS ── */
+        .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+        button {
+            font-family: var(--font-mono);
+            font-size: 0.52rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid var(--iron);
+            background: var(--coal);
+            color: var(--text);
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+        button:hover:not(:disabled) { border-color: var(--forge); color: var(--forge); }
+        button.primary { background: var(--forge); color: var(--ash); border-color: var(--forge); font-weight: 600; }
+        button.primary:hover:not(:disabled) { background: var(--forge2); }
+        button.danger  { border-color: var(--fail); color: var(--fail); }
+        button.danger:hover:not(:disabled)  { background: rgba(128,48,48,0.2); }
+        button:disabled { opacity: 0.35; cursor: not-allowed; }
+        .spin { display: inline-block; animation: spin 0.6s linear infinite; }
+        .hammer-anim { display: inline-block; animation: hammer 0.4s ease infinite; }
+
+        /* ── REJECTION LOG ── */
+        .rejection-panel {
+            background: var(--coal);
+            border: 1px solid var(--iron);
+            border-left: 3px solid var(--fail);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .rejection-title {
+            font-family: var(--font-mono);
+            font-size: 0.48rem;
+            letter-spacing: 2px;
+            color: var(--fail);
+            margin-bottom: 0.6rem;
+        }
+        .rejection-log {
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            padding: 0.4rem;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.44rem;
+        }
+        .rejection-entry {
+            padding: 0.2rem 0.3rem;
+            border-bottom: 1px solid rgba(58,42,24,0.4);
+            color: var(--muted);
+        }
+        .rejection-entry .reason { color: var(--fail); }
+
+        /* ── MAIN LOG ── */
+        .log-panel {
+            background: var(--coal);
+            border: 1px solid var(--iron);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--iron);
+            background: rgba(0,0,0,0.2);
+        }
+        .log-title { font-family: var(--font-mono); font-size: 0.48rem; letter-spacing: 2px; color: var(--muted); }
+        .log-body {
+            padding: 0.4rem;
+            max-height: 140px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.46rem;
+        }
+        .log-entry { padding: 0.18rem 0.3rem; border-bottom: 1px solid rgba(46,32,24,0.3); color: var(--muted); }
+        .log-entry.ok     { color: var(--pass); }
+        .log-entry.err    { color: var(--fail); }
+        .log-entry.forge  { color: var(--forge); }
+        .log-entry.return { color: var(--return); }
+
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .pipeline   { grid-template-columns: 1fr; }
+            .svo-display { grid-template-columns: 1fr; }
+            .svo-arrow   { display: none; }
+        }
+    </style>
 </head>
 <body>
+
+<!-- Cinder particles -->
+<div class="cinders" id="cinders"></div>
+
 <div class="container">
+
     <div class="header">
-        <h1>🔥 HEPHAESTUS · TWO-STAGE BUILDER</h1>
-        <div class="sub">Stage 1: Reflexes → Crafts (4-8 words) | Stage 2: Crafts → Constructs (9-15 words)</div>
-    </div>
-
-    <div class="stats-grid" id="statsGrid"></div>
-
-    <div class="panel">
-        <div class="panel-title">🏭 BUILD PIPELINE</div>
-        <button id="runHermesBtn" class="primary">⚡ Stage 0: Scrape Hermes Reflexes</button>
-        <button id="stage1Btn" class="primary">🔥 Stage 1: Forge Crafts (4-8 words)</button>
-        <button id="stage2Btn" class="primary">🔨 Stage 2: Forge Constructs → Demeter (9-15 words)</button>
-        <button id="runAllBtn">🏭 Run Full Pipeline</button>
-        <button id="clearBtn">🗑️ Clear Hephaestus & Demeter</button>
-        
-        <div id="status" style="margin-top: 1rem;">
-            <div class="status-step pending">⚡ Hermes Reflexes: Waiting</div>
-            <div class="status-step pending">🔥 Stage 1 Crafts: Waiting</div>
-            <div class="status-step pending">🔨 Stage 2 Constructs: Waiting</div>
+        <div>
+            <h1>🔨 HEPHAE<span>STUS</span></h1>
+            <div class="header-sub">THE COHERENCE FORGE · DOMAIN: FORGE · PYTHAGOREAN #6 · THE HEXAD</div>
+        </div>
+        <div class="telos-badge">
+            <div class="telos-label">TELOS</div>
+            I forge only what holds together. A concept without subject, verb, and object is rubble — and rubble I return. What passes my gate may bear weight. What fails goes back to Hermes, marked.
         </div>
     </div>
 
-    <div class="panel">
-        <div class="panel-title">📋 LOG</div>
-        <div id="ingestLog" class="log-area">
-            <div class="log-entry">🔥 Hephaestus ready. Run pipeline to build concepts.</div>
+    <!-- STATS -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card" style="--c:var(--steel)">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--steel)"></div>
+            <div class="stat-val" style="color:var(--steel)" id="statRaw">—</div>
+            <div class="stat-label">Raw Reflexes</div>
+        </div>
+        <div class="stat-card">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--forge)"></div>
+            <div class="stat-val" style="color:var(--forge)" id="statCrafts">—</div>
+            <div class="stat-label">Crafts (4-8w)</div>
+        </div>
+        <div class="stat-card">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--pass)"></div>
+            <div class="stat-val" style="color:var(--pass)" id="statForged">—</div>
+            <div class="stat-label">Forged (SVO ✓)</div>
+        </div>
+        <div class="stat-card">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--fail)"></div>
+            <div class="stat-val" style="color:var(--fail)" id="statRejected">—</div>
+            <div class="stat-label">Returned to Hermes</div>
+        </div>
+        <div class="stat-card">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--glow)"></div>
+            <div class="stat-val" style="color:var(--glow)" id="statSVO">—</div>
+            <div class="stat-label">SVO Triplets</div>
+        </div>
+        <div class="stat-card">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--cold)"></div>
+            <div class="stat-val" style="color:var(--cold)" id="statDispatch">—</div>
+            <div class="stat-label">Sent to Demeter</div>
         </div>
     </div>
+
+    <!-- PIPELINE STAGES -->
+    <div class="pipeline">
+        <div class="stage" id="stage0">
+            <div class="stage-num">STAGE 0 · INTAKE</div>
+            <div class="stage-name">⚡ Claim Reflexes</div>
+            <div class="stage-desc">Pull 1-3 word tokens from Hermes.<br>These are the raw ore — unformed, unchained.</div>
+            <div class="stage-counts">
+                <span class="stage-count queue" id="s0queue">— waiting</span>
+            </div>
+        </div>
+        <div class="stage" id="stage1">
+            <div class="stage-num">STAGE 1 · CRAFTING</div>
+            <div class="stage-name">🔥 Forge Crafts</div>
+            <div class="stage-desc">Combine reflexes into 4-8 word crafts.<br>Test for connective tissue. Weak joins are marked.</div>
+            <div class="stage-counts">
+                <span class="stage-count pass" id="s1pass">— passed</span>
+                <span class="stage-count fail" id="s1fail">— weak</span>
+            </div>
+        </div>
+        <div class="stage" id="stage2">
+            <div class="stage-num">STAGE 2 · THE GATE</div>
+            <div class="stage-name">🔨 SVO Gate</div>
+            <div class="stage-desc">Full S-V-O test. No exceptions.<br>Pass → svo_triplets. Fail → returned to Hermes, marked.</div>
+            <div class="stage-counts">
+                <span class="stage-count pass" id="s2pass">— forged</span>
+                <span class="stage-count fail" id="s2fail">— returned</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVO GATE VISUALIZER -->
+    <div class="svo-gate">
+        <div class="svo-gate-title">⚖️ SVO GATE · LAST TESTED CONSTRUCT</div>
+        <div class="svo-display">
+            <div class="svo-slot" id="svoS">
+                <div class="svo-role">SUBJECT</div>
+                <div class="svo-word" id="svoSWord">—</div>
+            </div>
+            <div class="svo-arrow">→</div>
+            <div class="svo-slot" id="svoV">
+                <div class="svo-role">VERB</div>
+                <div class="svo-word" id="svoVWord">—</div>
+            </div>
+            <div class="svo-arrow">→</div>
+            <div class="svo-slot" id="svoO">
+                <div class="svo-role">OBJECT</div>
+                <div class="svo-word" id="svoOWord">—</div>
+            </div>
+        </div>
+        <div id="svoVerdict" class="svo-verdict" style="display:none"></div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+        <button id="btnFull" class="primary">🔨 Run Full Forge</button>
+        <button id="btn0">⚡ Stage 0: Claim Reflexes</button>
+        <button id="btn1">🔥 Stage 1: Forge Crafts</button>
+        <button id="btn2">⚖️ Stage 2: SVO Gate</button>
+        <button id="btnClear" class="danger">🗑️ Clear Forge</button>
+    </div>
+
+    <!-- FORGE FLOOR -->
+    <div class="forge-floor">
+        <div class="forge-floor-title">
+            <span>🔥 FORGE FLOOR · LIVE OUTPUT</span>
+            <span id="floorCount" style="color:var(--muted)">0 concepts</span>
+        </div>
+        <div class="concept-grid" id="conceptGrid">
+            <div style="font-family:var(--font-mono);font-size:0.48rem;color:var(--muted);padding:1rem;grid-column:1/-1;text-align:center;font-style:italic;">
+                The forge awaits. Run the pipeline to begin.
+            </div>
+        </div>
+    </div>
+
+    <!-- REJECTION LOG -->
+    <div class="rejection-panel">
+        <div class="rejection-title">↩ RETURNED TO HERMES · REJECTION LEDGER</div>
+        <div class="rejection-log" id="rejectionLog">
+            <div class="rejection-entry" style="color:var(--muted);font-style:italic;">No rejections yet. The gate has not been tested.</div>
+        </div>
+    </div>
+
+    <!-- SYSTEM LOG -->
+    <div class="log-panel">
+        <div class="log-header">
+            <span class="log-title">📋 FORGE LOG</span>
+            <button onclick="document.getElementById('forgeLog').innerHTML=''" style="font-size:0.4rem;padding:0.18rem 0.4rem;">clear</button>
+        </div>
+        <div class="log-body" id="forgeLog">
+            <div class="log-entry forge">🔨 Hephaestus — Pythagorean #6, the Hexad. The coherence forge is cold. Run the pipeline.</div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    (function() {
-        const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
-        let supabase = null;
+// ════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════
+const KAIROS_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
+const KAIROS_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
+const sb = window.supabase.createClient(KAIROS_URL, KAIROS_KEY);
 
-        function addLog(msg, type = 'info') {
-            const log = document.getElementById('ingestLog');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            log.appendChild(entry);
-            entry.scrollIntoView({ behavior: 'smooth' });
+// ════════════════════════════════════════════════
+// CINDER PARTICLES
+// ════════════════════════════════════════════════
+function initCinders() {
+    const container = document.getElementById('cinders');
+    for (let i = 0; i < 18; i++) {
+        const c = document.createElement('div');
+        c.className = 'cinder';
+        c.style.left   = `${Math.random() * 100}%`;
+        c.style.bottom = `${Math.random() * 30}%`;
+        c.style.animationDuration  = `${3 + Math.random() * 5}s`;
+        c.style.animationDelay     = `${Math.random() * 6}s`;
+        c.style.opacity = '0';
+        container.appendChild(c);
+    }
+}
+
+// ════════════════════════════════════════════════
+// LOGGING
+// ════════════════════════════════════════════════
+function log(msg, type = 'info') {
+    const el = document.getElementById('forgeLog');
+    const d = document.createElement('div');
+    d.className = `log-entry ${type}`;
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    el.insertBefore(d, el.firstChild);
+    while (el.children.length > 60) el.removeChild(el.lastChild);
+}
+
+function logRejection(body, reason) {
+    const el = document.getElementById('rejectionLog');
+    // Clear placeholder
+    const placeholder = el.querySelector('[style*="font-style:italic"]');
+    if (placeholder) placeholder.remove();
+
+    const d = document.createElement('div');
+    d.className = 'rejection-entry';
+    d.innerHTML = `<span style="color:var(--text)">"${esc(body)}"</span> — <span class="reason">${esc(reason)}</span>`;
+    el.insertBefore(d, el.firstChild);
+    while (el.children.length > 30) el.removeChild(el.lastChild);
+}
+
+function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+// ════════════════════════════════════════════════
+// STAGE STATE
+// ════════════════════════════════════════════════
+let stageStats = { s1pass: 0, s1fail: 0, s2pass: 0, s2fail: 0 };
+let floorItems = [];
+
+function setStage(id, state) {
+    const el = document.getElementById(id);
+    el.classList.remove('active', 'done', 'failed');
+    if (state) el.classList.add(state);
+}
+
+function updateStageCounters() {
+    document.getElementById('s1pass').textContent = `${stageStats.s1pass} passed`;
+    document.getElementById('s1fail').textContent = `${stageStats.s1fail} weak`;
+    document.getElementById('s2pass').textContent = `${stageStats.s2pass} forged`;
+    document.getElementById('s2fail').textContent = `${stageStats.s2fail} returned`;
+}
+
+// ════════════════════════════════════════════════
+// SVO GATE — THE HEART OF HEPHAESTUS
+// ════════════════════════════════════════════════
+
+// Linguistic dictionaries for SVO detection
+const VERBS = new Set([
+    'is','are','was','were','be','been','being',
+    'has','have','had','does','do','did',
+    'becomes','become','became','makes','make','made',
+    'creates','create','created','builds','build','built',
+    'flows','flow','flowed','grows','grow','grew',
+    'holds','hold','held','bears','bear','bore',
+    'reveals','reveal','revealed','transforms','transform',
+    'emerges','emerge','emerged','forges','forge','forged',
+    'integrates','integrate','integrated','resonates','resonate',
+    'grounds','ground','grounded','shapes','shape','shaped',
+    'drives','drive','drove','generates','generate','generated',
+    'produces','produce','produced','sustains','sustain',
+    'contains','contain','contained','carries','carry','carried',
+    'forms','form','formed','binds','bind','bound',
+    'moves','move','moved','acts','act','acted',
+    'reaches','reach','reached','seeks','seek','sought',
+    'calls','call','called','knows','know','knew',
+    'finds','find','found','sees','see','saw',
+    'gives','give','gave','takes','take','took',
+    'yields','yield','yielded','breaks','break','broke',
+    'passes','pass','passed','fails','fail','failed',
+    'returns','return','returned','marks','mark','marked',
+    'tests','test','tested','proves','prove','proved',
+    'serves','serve','served','feeds','feed','fed',
+    'opens','open','opened','closes','close','closed',
+    'becomes','turn','turns','turned','grows','grew',
+]);
+
+const NOUNS_INDICATORS = new Set([
+    'the','a','an','this','that','these','those',
+    'its','their','our','your','his','her','my',
+    'which','what','who','it',
+]);
+
+const FUNCTION_WORDS = new Set([
+    'of','in','on','at','by','for','with','from','to','into',
+    'through','between','among','within','without','across',
+    'and','or','but','nor','yet','so',
+    'when','while','as','because','since','although','though',
+    'if','unless','until','after','before',
+]);
+
+/**
+ * testSVO — the gate itself.
+ * Returns { subject, verb, object, passed, reason }
+ *
+ * Hephaestus's question:
+ *   "Do you have something that acts,
+ *    something that moves,
+ *    and something that receives?"
+ */
+function testSVO(sentence) {
+    const words = sentence.toLowerCase()
+        .replace(/[^a-z\s']/g, '')
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (words.length < 3) {
+        return { passed: false, reason: 'too short to hold structure', subject: null, verb: null, object: null };
+    }
+
+    // Find first verb
+    let verbIdx = -1;
+    let verbWord = null;
+    for (let i = 0; i < words.length; i++) {
+        if (VERBS.has(words[i])) {
+            verbIdx = i;
+            verbWord = words[i];
+            break;
+        }
+    }
+
+    if (verbIdx === -1) {
+        return { passed: false, reason: 'no verb found — nothing moves', subject: null, verb: null, object: null };
+    }
+
+    // Subject: longest noun-like phrase before verb
+    const preVerb = words.slice(0, verbIdx).filter(w => !FUNCTION_WORDS.has(w));
+    if (preVerb.length === 0) {
+        return { passed: false, reason: 'no subject before verb — nothing acts', subject: null, verb: verbWord, object: null };
+    }
+    const subject = preVerb.slice(-2).join(' '); // take up to 2 words as subject phrase
+
+    // Object: meaningful content after verb
+    const postVerb = words.slice(verbIdx + 1).filter(w => !FUNCTION_WORDS.has(w) && w.length > 2);
+    if (postVerb.length === 0) {
+        return { passed: false, reason: 'no object after verb — nothing receives', subject, verb: verbWord, object: null };
+    }
+    const object = postVerb.slice(0, 2).join(' ');
+
+    return { passed: true, reason: 'coherent — subject acts, verb moves, object receives', subject, verb: verbWord, object };
+}
+
+function displaySVOResult(body, result) {
+    const sS = document.getElementById('svoS');
+    const sV = document.getElementById('svoV');
+    const sO = document.getElementById('svoO');
+
+    sS.className = 'svo-slot ' + (result.subject ? 'filled' : 'missing');
+    sV.className = 'svo-slot ' + (result.verb    ? 'filled' : 'missing');
+    sO.className = 'svo-slot ' + (result.object  ? 'filled' : 'missing');
+
+    document.getElementById('svoSWord').textContent = result.subject || '∅';
+    document.getElementById('svoVWord').textContent = result.verb    || '∅';
+    document.getElementById('svoOWord').textContent = result.object  || '∅';
+
+    const verdict = document.getElementById('svoVerdict');
+    verdict.style.display = 'block';
+    verdict.className = 'svo-verdict ' + (result.passed ? 'pass' : 'fail');
+    verdict.textContent = result.passed
+        ? `✓ FORGED — ${result.reason}`
+        : `✕ RETURNED — ${result.reason}`;
+}
+
+// ════════════════════════════════════════════════
+// FORGE FLOOR RENDER
+// ════════════════════════════════════════════════
+function addToFloor(body, status, meta) {
+    floorItems.unshift({ body, status, meta });
+    if (floorItems.length > 40) floorItems.pop();
+    renderFloor();
+}
+
+function renderFloor() {
+    const grid = document.getElementById('conceptGrid');
+    document.getElementById('floorCount').textContent = `${floorItems.length} concepts`;
+
+    if (!floorItems.length) {
+        grid.innerHTML = '<div style="font-family:var(--font-mono);font-size:0.48rem;color:var(--muted);padding:1rem;grid-column:1/-1;text-align:center;">The forge awaits.</div>';
+        return;
+    }
+
+    grid.innerHTML = floorItems.map(item => `
+        <div class="concept-card ${item.status}">
+            <div class="concept-body">${esc(item.body)}</div>
+            <div class="concept-meta">${item.meta}</div>
+            <div class="concept-verdict ${item.status === 'forged' ? 'pass' : item.status === 'returned' ? 'fail' : 'return'}">
+                ${item.status === 'forged' ? '✓ FORGED' : item.status === 'returned' ? '↩ RETURNED' : '⟳ TESTING'}
+            </div>
+        </div>
+    `).join('');
+}
+
+// ════════════════════════════════════════════════
+// DB STATS
+// ════════════════════════════════════════════════
+async function updateStats() {
+    try {
+        const [raw, crafts, svo, dispatch] = await Promise.all([
+            sb.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'hermes').eq('state', 'raw'),
+            sb.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'hephaestus'),
+            sb.from('svo_triplets').select('*', { count: 'exact', head: true }),
+            sb.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'demeter'),
+        ]);
+        document.getElementById('statRaw').textContent     = raw.count     || 0;
+        document.getElementById('statCrafts').textContent  = crafts.count  || 0;
+        document.getElementById('statSVO').textContent     = svo.count     || 0;
+        document.getElementById('statDispatch').textContent = dispatch.count || 0;
+        document.getElementById('s0queue').textContent     = `${raw.count || 0} waiting`;
+
+        // Forged / rejected counts from svo_triplets
+        const { count: forgedCount } = await sb.from('svo_triplets').select('*', { count: 'exact', head: true });
+        document.getElementById('statForged').textContent   = forgedCount || 0;
+
+        const { count: rejectedCount } = await sb.from('concepts').select('*', { count: 'exact', head: true })
+            .eq('source', 'rejected_by_hephaestus');
+        document.getElementById('statRejected').textContent = rejectedCount || 0;
+    } catch (e) {
+        log(`Stats error: ${e.message}`, 'err');
+    }
+}
+
+// ════════════════════════════════════════════════
+// STAGE 0 — CLAIM HERMES REFLEXES
+// ════════════════════════════════════════════════
+async function stage0() {
+    setStage('stage0', 'active');
+    log('⚡ Claiming reflexes from Hermes...', 'forge');
+
+    const { data: tokens, error } = await sb
+        .from('concepts')
+        .select('id, body, score, generation, word_count')
+        .eq('band', 'hermes')
+        .eq('state', 'raw')
+        .order('score', { ascending: false })
+        .limit(40);
+
+    if (error || !tokens?.length) {
+        log(`⚡ No raw reflexes. Run Hermes first.`, 'err');
+        setStage('stage0', 'failed');
+        return [];
+    }
+
+    log(`⚡ Claimed ${tokens.length} raw reflexes from Hermes.`, 'ok');
+    setStage('stage0', 'done');
+    await updateStats();
+    return tokens;
+}
+
+// ════════════════════════════════════════════════
+// STAGE 1 — FORGE CRAFTS (4-8 words)
+// ════════════════════════════════════════════════
+
+// Craft templates — scaffolds for building connective tissue
+const CRAFT_TEMPLATES = [
+    (a, b) => `${a} that ${b}`,
+    (a, b) => `${a} becomes ${b}`,
+    (a, b) => `${a} holds ${b}`,
+    (a, b) => `${a} through ${b}`,
+    (a, b) => `the ${a} bears ${b}`,
+    (a, b) => `when ${a} meets ${b}`,
+    (a, b) => `${a} forges ${b}`,
+    (a, b) => `${a} feeds ${b}`,
+    (a, b) => `${a} breaks ${b}`,
+    (a, b) => `${a} carries ${b}`,
+    (a, b) => `${a} drives ${b}`,
+    (a, b) => `${a} reveals ${b}`,
+];
+
+async function stage1(reflexes) {
+    if (!reflexes?.length) { log('Stage 1 needs reflexes.', 'err'); return []; }
+    setStage('stage1', 'active');
+    log('🔥 Forging crafts from reflexes...', 'forge');
+
+    stageStats.s1pass = 0;
+    stageStats.s1fail = 0;
+
+    const crafts = [];
+    const used = new Set();
+
+    for (let i = 0; i < 24; i++) {
+        const a = reflexes[Math.floor(Math.random() * reflexes.length)];
+        const b = reflexes[Math.floor(Math.random() * reflexes.length)];
+        if (a.id === b.id) continue;
+
+        const tmpl = CRAFT_TEMPLATES[Math.floor(Math.random() * CRAFT_TEMPLATES.length)];
+        const craft = tmpl(a.body, b.body).toLowerCase().trim();
+        const wc = craft.split(/\s+/).length;
+
+        if (wc < 4 || wc > 8 || used.has(craft)) continue;
+        used.add(craft);
+
+        // Light coherence check: does it have at least a verb?
+        const hasVerb = craft.split(/\s+/).some(w => VERBS.has(w));
+        if (!hasVerb) {
+            stageStats.s1fail++;
+            addToFloor(craft, 'returned', `wc:${wc} · no verb structure`);
+            log(`  ✗ Weak: "${craft}" — no connective verb`, 'return');
+            continue;
         }
 
-        function updateStatus(step, status) {
-            const steps = { hermes: 0, stage1: 1, stage2: 2 };
-            const icons = { hermes: '⚡', stage1: '🔥', stage2: '🔨' };
-            const names = { hermes: 'Hermes Reflexes', stage1: 'Stage 1 Crafts', stage2: 'Stage 2 Constructs' };
-            const statusClass = status === 'complete' ? 'complete' : status === 'running' ? 'running' : 'pending';
-            const statusText = status === 'complete' ? 'Complete' : status === 'running' ? 'Running...' : 'Waiting';
-            
-            const divs = document.querySelectorAll('.status-step');
-            if (divs[steps[step]]) {
-                divs[steps[step]].className = `status-step ${statusClass}`;
-                divs[steps[step]].innerHTML = `${icons[step]} ${names[step]}: ${statusText}`;
-            }
+        stageStats.s1pass++;
+        const avgScore = Math.round((a.score + b.score) / 2) + 5;
+        const { error } = await sb.from('concepts').insert({
+            body: craft,
+            band: 'hephaestus',
+            source: 'forge_stage1',
+            score: Math.min(100, avgScore),
+            word_type: 'craft',
+            word_count: wc,
+            metadata: { word_count: wc, parents: [a.id, b.id] },
+            expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+            created_at: new Date().toISOString(),
+            generation: Math.max(a.generation || 1, b.generation || 1) + 1,
+            parent_ids: [a.id, b.id],
+            mutation_count: 0
+        });
+
+        if (!error) {
+            crafts.push({ body: craft, score: avgScore });
+            addToFloor(craft, 'forged', `wc:${wc} · craft stage`);
+        }
+    }
+
+    updateStageCounters();
+    log(`🔥 Stage 1: ${stageStats.s1pass} crafts forged, ${stageStats.s1fail} weak.`, stageStats.s1pass > 0 ? 'ok' : 'err');
+    setStage('stage1', stageStats.s1pass > 0 ? 'done' : 'failed');
+    await updateStats();
+    return crafts;
+}
+
+// ════════════════════════════════════════════════
+// STAGE 2 — SVO GATE → svo_triplets
+// ════════════════════════════════════════════════
+
+// Construct templates — longer, more complex
+const CONSTRUCT_TEMPLATES = [
+    (a, b) => `the ${a} forges ${b} into coherent form`,
+    (a, b) => `when ${a} holds ${b}, structure becomes possible`,
+    (a, b) => `${a} reveals ${b} as the ground of meaning`,
+    (a, b) => `${a} carries ${b} through the test of weight`,
+    (a, b) => `what ${a} builds, ${b} inherits as its form`,
+    (a, b) => `${a} breaks ${b} down until only structure remains`,
+    (a, b) => `the forge of ${a} produces ${b} as its first truth`,
+    (a, b) => `${a} drives ${b} toward its own completion`,
+    (a, b) => `${a} tests ${b} at the gate before it may pass`,
+    (a, b) => `${a} feeds ${b} back to hermes, marked and counted`,
+];
+
+async function stage2() {
+    setStage('stage2', 'active');
+    log('⚖️ Running SVO gate on constructs...', 'forge');
+
+    const { data: crafts } = await sb
+        .from('concepts')
+        .select('id, body, score, generation')
+        .eq('band', 'hephaestus')
+        .order('score', { ascending: false })
+        .limit(30);
+
+    if (!crafts?.length) {
+        log('⚖️ No crafts to test. Run Stage 1 first.', 'err');
+        setStage('stage2', 'failed');
+        return 0;
+    }
+
+    stageStats.s2pass = 0;
+    stageStats.s2fail = 0;
+
+    const used = new Set();
+
+    for (let i = 0; i < 16; i++) {
+        const a = crafts[Math.floor(Math.random() * crafts.length)];
+        const b = crafts[Math.floor(Math.random() * crafts.length)];
+        if (a.id === b.id) continue;
+
+        const tmpl = CONSTRUCT_TEMPLATES[Math.floor(Math.random() * CONSTRUCT_TEMPLATES.length)];
+        const construct = tmpl(a.body, b.body).toLowerCase().trim();
+        const wc = construct.split(/\s+/).length;
+
+        if (wc < 9 || wc > 18 || used.has(construct)) continue;
+        used.add(construct);
+
+        // Mark as testing on floor
+        addToFloor(construct, 'testing', `wc:${wc} · testing SVO`);
+
+        // THE GATE
+        const svo = testSVO(construct);
+        displaySVOResult(construct, svo);
+
+        if (!svo.passed) {
+            // RETURN TO HERMES — marked
+            stageStats.s2fail++;
+            logRejection(construct, svo.reason);
+            log(`  ↩ RETURNED: "${construct.substring(0,50)}..." — ${svo.reason}`, 'return');
+
+            await sb.from('concepts').insert({
+                body: construct,
+                band: 'hermes',
+                source: 'rejected_by_hephaestus',
+                state: 'returned',
+                score: 10,
+                word_count: wc,
+                metadata: {
+                    rejection_reason: svo.reason,
+                    subject_found: svo.subject,
+                    verb_found: svo.verb,
+                    object_found: svo.object,
+                    returned_at: new Date().toISOString()
+                },
+                created_at: new Date().toISOString(),
+                expires_at: new Date(Date.now() + 3 * 86400000).toISOString(),
+            });
+
+            // Update floor card
+            floorItems[0].status = 'returned';
+            renderFloor();
+            continue;
         }
 
-        async function updateStats() {
-            const { count: reflexes } = await supabase.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'hermes');
-            const { count: crafts } = await supabase.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'hephaestus');
-            const { count: constructs } = await supabase.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'demeter');
-            
-            document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card"><div class="stat-number">${reflexes || 0}</div><div class="stat-label">Hermes Reflexes (1-3)</div></div>
-                <div class="stat-card"><div class="stat-number">${crafts || 0}</div><div class="stat-label">Hephaestus Crafts (4-8)</div></div>
-                <div class="stat-card"><div class="stat-number">${constructs || 0}</div><div class="stat-label">Demeter Constructs (9-15)</div></div>
-            `;
+        // PASS THE GATE → write to svo_triplets
+        stageStats.s2pass++;
+        const avgScore = Math.round((a.score + b.score) / 2) + 10;
+
+        const { error } = await sb.from('svo_triplets').insert({
+            subject:   svo.subject,
+            verb:      svo.verb,
+            object:    svo.object,
+            full_text: construct,
+            score:     Math.min(100, avgScore),
+            state:     'forged',
+            source:    'hephaestus_gate',
+            domain:    'forge',
+            created_at: new Date().toISOString(),
+            metadata: {
+                word_count: wc,
+                parent_crafts: [a.id, b.id],
+                svo_analysis: { subject: svo.subject, verb: svo.verb, object: svo.object }
+            }
+        });
+
+        if (!error) {
+            log(`  ✓ FORGED: "${construct.substring(0,50)}..."`, 'ok');
+            log(`    S:"${svo.subject}" V:"${svo.verb}" O:"${svo.object}"`, 'ok');
+            floorItems[0].status = 'forged';
+            renderFloor();
         }
 
-        // ============================================
-        // STAGE 0: HERMES SCRAPE
-        // ============================================
-        async function runHermes() {
-            addLog('⚡ Scraping Hermes reflexes...', 'info');
-            updateStatus('hermes', 'running');
-            
-            const STOPWORDS = new Set(['the','and','for','with','this','that','from','have','are','was','were','how','why','what','when','where','who','which','there','their','they','them','then','than','about','into','through','during','before','after','above','below','between','under','very','just','but','not','you','your','our','its','has','had','been','being','can','will','would','could','should','might','like','because','after','while','since']);
-            const PRIORITY = new Set(['ai','ml','api','data','cloud','native','scalable','async','pipeline','workflow','automation','frontier','alignment','resonance','collapse','emergence','paradox','recursion','entropy','fractal','quantum','neural','vector','embedding','inference','latency','throughput','semantic','intelligence']);
-            
-            function extractTokens(text) {
-                return text.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => w.length >= 4 && w.length <= 12 && !STOPWORDS.has(w));
-            }
-            function scoreWord(word, freq) {
-                let s = Math.min(80, freq * 6);
-                if (PRIORITY.has(word)) s += 30;
-                if (word.length >= 6 && word.length <= 10) s += 10;
-                return Math.min(100, s);
-            }
-            
-            async function fetchReddit() {
-                try {
-                    const res = await fetch('https://www.reddit.com/r/all/top.json?limit=50&t=day');
-                    const data = await res.json();
-                    const tokens = data.data.children.map(c => c.data.title).flatMap(t => extractTokens(t));
-                    const freq = new Map(); tokens.forEach(t => freq.set(t, (freq.get(t)||0)+1));
-                    return Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([w,c]) => ({body:w, source:'reddit', score:scoreWord(w,c)}));
-                } catch(e) { return []; }
-            }
-            async function fetchHN() {
-                try {
-                    const ids = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json').then(r=>r.json());
-                    const stories = await Promise.all(ids.slice(0,30).map(async id => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(r=>r.json())));
-                    const tokens = stories.filter(s=>s&&s.title).map(s=>s.title).flatMap(t=>extractTokens(t));
-                    const freq = new Map(); tokens.forEach(t=>freq.set(t,(freq.get(t)||0)+1));
-                    return Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([w,c])=>({body:w, source:'hn', score:scoreWord(w,c)}));
-                } catch(e) { return []; }
-            }
-            async function fetchGitHub() {
-                try {
-                    const date = new Date(); date.setDate(date.getDate()-7);
-                    const res = await fetch(`https://api.github.com/search/repositories?q=created:>${date.toISOString().split('T')[0]}&sort=stars&order=desc&per_page=30`);
-                    const data = await res.json();
-                    const texts = data.items.flatMap(item=>[item.name, item.description].filter(Boolean));
-                    const tokens = texts.flatMap(t=>extractTokens(t));
-                    const freq = new Map(); tokens.forEach(t=>freq.set(t,(freq.get(t)||0)+1));
-                    let items = Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,15);
-                    if(items.length===0) items=[['api',1],['data',1],['cloud',1],['native',1],['scalable',1],['async',1]].map(([w,c])=>[w,c]);
-                    return items.map(([w,c])=>({body:w, source:'github', score:scoreWord(w,c)+15}));
-                } catch(e) { return []; }
-            }
-            
-            const [reddit, hn, github] = await Promise.all([fetchReddit(), fetchHN(), fetchGitHub()]);
-            let saved = 0;
-            for (const c of [...reddit, ...hn, ...github]) {
-                const wc = c.body.split(/\s+/).length;
-                if(wc >= 1 && wc <= 3){
-                    const exp = new Date(); exp.setDate(exp.getDate()+3);
-                    const { error } = await supabase.from('concepts').insert({
-                        body: c.body.toLowerCase(), band: 'hermes', source: c.source, score: c.score,
-                        word_type: 'noun', metadata: {word_count: wc}, expires_at: exp.toISOString(), created_at: new Date().toISOString(),
-                        generation: 1, parent_ids: [], mutation_count: 0
-                    });
-                    if(!error) saved++;
-                }
-            }
-            addLog(`✅ Hermes: ${saved} reflexes`, saved>0?'success':'warning');
-            updateStatus('hermes', 'complete');
-            await updateStats();
-            return saved;
-        }
+        // Small delay so the SVO visualizer is readable
+        await new Promise(r => setTimeout(r, 300));
+    }
 
-        // ============================================
-        // STAGE 1: Combine reflexes → crafts (4-8 words)
-        // ============================================
-        async function runStage1() {
-            addLog('🔥 Stage 1: Forging crafts from reflexes...', 'info');
-            updateStatus('stage1', 'running');
-            
-            const { data: reflexes } = await supabase
-                .from('concepts')
-                .select('id, body, score, generation')
-                .eq('band', 'hermes')
-                .order('score', { ascending: false })
-                .limit(30);
-            
-            if (!reflexes || reflexes.length < 2) {
-                addLog('⚠️ Need at least 2 reflexes', 'warning');
-                updateStatus('stage1', 'complete');
-                return 0;
-            }
-            
-            const patterns = [
-                (a,b) => `${a} ${b}`,
-                (a,b) => `${a} and ${b}`,
-                (a,b) => `the ${a} ${b}`,
-                (a,b) => `${a} of ${b}`,
-                (a,b) => `when ${a} ${b}`,
-                (a,b) => `${a} emerges from ${b}`,
-                (a,b) => `through ${a}, ${b}`,
-                (a,b) => `${a} becomes ${b}`
-            ];
-            
-            let saved = 0;
-            const used = new Set();
-            
-            for (let i = 0; i < 20; i++) {
-                const a = reflexes[Math.floor(Math.random() * reflexes.length)];
-                const b = reflexes[Math.floor(Math.random() * reflexes.length)];
-                const pattern = patterns[Math.floor(Math.random() * patterns.length)];
-                let craft = pattern(a.body, b.body);
-                const wordCount = craft.split(/\s+/).length;
-                
-                if (wordCount >= 4 && wordCount <= 8 && !used.has(craft)) {
-                    used.add(craft);
-                    const exp = new Date(); exp.setDate(exp.getDate() + 7);
-                    const avgScore = Math.round((a.score + b.score) / 2) + 5;
-                    
-                    const { error } = await supabase.from('concepts').insert({
-                        body: craft.toLowerCase(),
-                        band: 'hephaestus',
-                        source: 'forge',
-                        score: Math.min(100, avgScore),
-                        word_type: 'craft',
-                        metadata: { word_count: wordCount, pattern_used: pattern },
-                        expires_at: exp.toISOString(),
-                        created_at: new Date().toISOString(),
-                        generation: Math.max(a.generation, b.generation) + 1,
-                        parent_ids: [a.id, b.id],
-                        mutation_count: 0
-                    });
-                    if (!error) saved++;
-                }
-            }
-            
-            addLog(`✅ Stage 1: ${saved} crafts forged`, saved > 0 ? 'success' : 'warning');
-            updateStatus('stage1', 'complete');
-            await updateStats();
-            return saved;
-        }
+    updateStageCounters();
+    log(`⚖️ Gate complete: ${stageStats.s2pass} forged, ${stageStats.s2fail} returned.`, stageStats.s2pass > 0 ? 'ok' : 'err');
+    setStage('stage2', stageStats.s2pass > 0 ? 'done' : 'failed');
+    await updateStats();
+    return stageStats.s2pass;
+}
 
-        // ============================================
-        // STAGE 2: Combine crafts → constructs (9-15 words)
-        // Writes directly to band='demeter'
-        // ============================================
-        async function runStage2() {
-            addLog('🔨 Stage 2: Forging constructs from crafts → Demeter...', 'info');
-            updateStatus('stage2', 'running');
-            
-            const { data: crafts } = await supabase
-                .from('concepts')
-                .select('id, body, score, generation')
-                .eq('band', 'hephaestus')
-                .order('score', { ascending: false })
-                .limit(30);
-            
-            if (!crafts || crafts.length < 2) {
-                addLog('⚠️ Need at least 2 crafts', 'warning');
-                updateStatus('stage2', 'complete');
-                return 0;
-            }
-            
-            const templates = [
-                (a, b) => `${a} ${b} This combination reveals new structure.`,
-                (a, b) => `When ${a} and ${b} merge, a deeper pattern emerges.`,
-                (a, b) => `Through ${a}, ${b} transforms into higher order.`,
-                (a, b) => `${a} flows into ${b}, creating accumulated context.`,
-                (a, b) => `The synthesis of ${a} and ${b} grounds new understanding.`,
-                (a, b) => `${a} resonates with ${b}, forming a coherent field.`,
-                (a, b) => `As ${a} integrates with ${b}, the construct stabilizes.`
-            ];
-            
-            let saved = 0;
-            const used = new Set();
-            
-            for (let i = 0; i < 15; i++) {
-                const a = crafts[Math.floor(Math.random() * crafts.length)];
-                const b = crafts[Math.floor(Math.random() * crafts.length)];
-                const template = templates[Math.floor(Math.random() * templates.length)];
-                let construct = template(a.body, b.body);
-                construct = construct.charAt(0).toUpperCase() + construct.slice(1);
-                const wordCount = construct.split(/\s+/).length;
-                
-                if (wordCount >= 9 && wordCount <= 15 && !used.has(construct)) {
-                    used.add(construct);
-                    const exp = new Date(); exp.setDate(exp.getDate() + 14);
-                    const avgScore = Math.round((a.score + b.score) / 2) + 10;
-                    
-                    const { error } = await supabase.from('concepts').insert({
-                        body: construct.toLowerCase(),
-                        band: 'demeter',  // ← DIRECT TO DEMETER
-                        source: 'construct',
-                        score: Math.min(100, avgScore),
-                        word_type: 'construct',
-                        metadata: { word_count: wordCount, template_used: template },
-                        expires_at: exp.toISOString(),
-                        created_at: new Date().toISOString(),
-                        generation: Math.max(a.generation, b.generation) + 1,
-                        parent_ids: [a.id, b.id],
-                        mutation_count: 0
-                    });
-                    if (!error) saved++;
-                }
-            }
-            
-            addLog(`✅ Stage 2: ${saved} constructs sent to Demeter band`, saved > 0 ? 'success' : 'warning');
-            updateStatus('stage2', 'complete');
-            await updateStats();
-            return saved;
-        }
+// ════════════════════════════════════════════════
+// FULL PIPELINE
+// ════════════════════════════════════════════════
+async function runFull() {
+    setBtns(true);
+    log('🔨 Full forge pipeline initiated.', 'forge');
+    const reflexes = await stage0();
+    if (!reflexes.length) { setBtns(false); return; }
+    await stage1(reflexes);
+    await stage2();
+    await archiveSelf();
+    log('🔨 Forge complete. The gate has spoken.', 'forge');
+    setBtns(false);
+}
 
-        async function runFullPipeline() {
-            addLog('🏭 Running full build pipeline...', 'info');
-            await runHermes();
-            await runStage1();
-            await runStage2();
-            addLog('🏭 Pipeline complete!', 'success');
-        }
+// ════════════════════════════════════════════════
+// ARCHIVE SELF TO HTML TABLE
+// ════════════════════════════════════════════════
+async function archiveSelf() {
+    try {
+        const html = document.documentElement.outerHTML;
+        await sb.from('html').upsert({
+            filename: 'hephaestus.html',
+            title: '🔨 Hephaestus · The Coherence Forge',
+            type: 'chthonic',
+            content: html,
+            description: 'Forges SVO-coherent constructs from Hermes reflexes. Rejects incoherent structures back to Hermes marked. Writes passing constructs to svo_triplets.',
+            reads_from: ['concepts'],
+            writes_to: ['concepts', 'svo_triplets'],
+            models_used: [],
+            url: window.location.href,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'filename' });
+        log('Archived to html table.', 'ok');
+    } catch (e) { log(`Archive failed: ${e.message}`, 'err'); }
+}
 
-        async function clearData() {
-            await supabase.from('concepts').delete().in('band', ['hephaestus', 'demeter']);
-            addLog('🗑️ Cleared Hephaestus and Demeter bands', 'success');
-            await updateStats();
-        }
+// ════════════════════════════════════════════════
+// CLEAR
+// ════════════════════════════════════════════════
+async function clearForge() {
+    if (!confirm('Clear all Hephaestus crafts and SVO triplets?')) return;
+    await Promise.all([
+        sb.from('concepts').delete().eq('band', 'hephaestus'),
+        sb.from('concepts').delete().eq('source', 'rejected_by_hephaestus'),
+        sb.from('svo_triplets').delete().eq('source', 'hephaestus_gate'),
+    ]);
+    floorItems = [];
+    renderFloor();
+    stageStats = { s1pass: 0, s1fail: 0, s2pass: 0, s2fail: 0 };
+    updateStageCounters();
+    ['stage0','stage1','stage2'].forEach(s => setStage(s, null));
+    await updateStats();
+    log('🗑️ Forge cleared.', 'err');
+}
 
-        async function init() {
-            if (!window.supabase) { addLog('Supabase failed to load', 'error'); return; }
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            await updateStats();
-            
-            document.getElementById('runHermesBtn').onclick = runHermes;
-            document.getElementById('stage1Btn').onclick = runStage1;
-            document.getElementById('stage2Btn').onclick = runStage2;
-            document.getElementById('runAllBtn').onclick = runFullPipeline;
-            document.getElementById('clearBtn').onclick = clearData;
-            
-            addLog('🔥 Hephaestus ready. Run pipeline to build concepts.', 'success');
-        }
-        
-        init();
-    })();
+function setBtns(disabled) {
+    ['btnFull','btn0','btn1','btn2','btnClear'].forEach(id => {
+        document.getElementById(id).disabled = disabled;
+    });
+    document.getElementById('btnFull').innerHTML = disabled
+        ? '<span class="hammer-anim">🔨</span> Forging...'
+        : '🔨 Run Full Forge';
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+function init() {
+    initCinders();
+    updateStats();
+
+    document.getElementById('btnFull').onclick  = runFull;
+    document.getElementById('btn0').onclick     = stage0;
+    document.getElementById('btn1').onclick     = async () => { const r = await stage0(); await stage1(r); };
+    document.getElementById('btn2').onclick     = stage2;
+    document.getElementById('btnClear').onclick = clearForge;
+
+    setTimeout(archiveSelf, 3000);
+    log('🔨 Hephaestus — Pythagorean #6, the Hexad. The coherence forge is ready.', 'forge');
+}
+
+init();
 </script>
 </body>
 </html>

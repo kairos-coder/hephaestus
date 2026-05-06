@@ -3,1155 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔨 Hephaestus · The Coherence Forge</title>
+    <title>🔨 Hephaestus · Image Forge</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=JetBrains+Mono:wght@300;400;500&display=swap');
-
         :root {
-            --ash:    #0e0c0a;
-            --coal:   #181410;
-            --ember:  #221a12;
-            --iron:   #2e2018;
-            --slag:   #3a2a18;
-            --forge:  #c07040;
-            --forge2: #e08840;
-            --heat:   #ff6020;
-            --glow:   #ffaa40;
-            --steel:  #8090a0;
-            --cold:   #4060a0;
-            --pass:   #407040;
-            --fail:   #803030;
-            --return: #604020;
-            --text:   #d0c0a8;
-            --muted:  #5a4a38;
-            --font-display: 'Cinzel', serif;
-            --font-body:    'Crimson Pro', serif;
-            --font-mono:    'JetBrains Mono', monospace;
+            --void: #08080c; --deep: #100f14; --surface: #1a1820; --ember: #2a2018;
+            --forge: #c07040; --forge-bright: #e08850; --iron: #8a6a50; --slag: #4a3830;
+            --molten: #ff9940; --cooling: #604030; --anvil: #3a3a40; --spark: #ffcc80;
+            --gold: #c8943a; --mist: #8a8080; --pale: #d4c8c0;
+            --completed: #5a9060; --fire: #e04020;
+            --font-display: 'Cinzel', serif; --font-body: 'Crimson Pro', serif; --font-mono: 'JetBrains Mono', monospace;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: var(--void); font-family: var(--font-body); color: var(--pale); 
+            min-height: 100vh; background-image: 
+                radial-gradient(ellipse 50% 30% at 50% 0%, rgba(192,112,64,0.06) 0%, transparent 60%),
+                repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.003) 3px, rgba(255,255,255,0.003) 4px);
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 
-        body {
-            background: var(--ash);
-            color: var(--text);
-            font-family: var(--font-body);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        .header { text-align: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--ember); }
+        .header h1 { font-family: var(--font-display); font-size: 2.4rem; color: var(--forge-bright); letter-spacing: 4px; }
+        .header-sub { font-family: var(--font-mono); font-size: 0.55rem; color: var(--mist); letter-spacing: 3px; margin-top: 0.3rem; }
+        .anvil-icon { font-size: 3rem; margin-bottom: 0.5rem; animation: pound 2s ease-in-out infinite; }
+        @keyframes pound { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); filter: brightness(1.3); } }
 
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 60% 50% at 50% 100%, rgba(192,112,64,0.07) 0%, transparent 70%),
-                radial-gradient(ellipse 40% 20% at 20% 80%, rgba(255,96,32,0.04) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 0;
-        }
+        .status-bar { display: flex; gap: 2rem; justify-content: center; margin-bottom: 1.5rem; font-family: var(--font-mono); font-size: 0.55rem; color: var(--mist); }
+        .status-bar span { color: var(--pale); font-weight: 500; }
+        .badge { padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.5rem; }
+        .badge-live { background: rgba(192,112,64,0.15); color: var(--forge-bright); }
+        .badge-hot { background: rgba(224,64,32,0.15); color: var(--fire); }
 
-        /* Cinder particle effect */
-        .cinders {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-        .cinder {
-            position: absolute;
-            width: 2px; height: 2px;
-            border-radius: 50%;
-            background: var(--heat);
-            opacity: 0;
-            animation: rise linear infinite;
-        }
-        @keyframes rise {
-            0%   { opacity: 0; transform: translateY(0) scale(1); }
-            10%  { opacity: 0.8; }
-            90%  { opacity: 0.3; }
-            100% { opacity: 0; transform: translateY(-60vh) scale(0.2); }
-        }
-        @keyframes pulse  { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-        @keyframes spin   { to { transform: rotate(360deg); } }
-        @keyframes hammer { 0%,100% { transform: translateY(0) rotate(-10deg); } 50% { transform: translateY(4px) rotate(10deg); } }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes flare  { 0%,100% { box-shadow: 0 0 8px var(--forge); } 50% { box-shadow: 0 0 20px var(--heat), 0 0 40px rgba(255,96,32,0.3); } }
+        .controls { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap; }
+        button { font-family: var(--font-mono); font-size: 0.6rem; padding: 0.5rem 1rem; border-radius: 3px; cursor: pointer; border: 1px solid var(--iron); background: var(--surface); color: var(--pale); transition: all 0.2s; letter-spacing: 1px; }
+        button:hover:not(:disabled) { background: var(--forge); color: var(--void); border-color: var(--forge-bright); }
+        button.primary { background: var(--forge); color: var(--void); border-color: var(--forge-bright); }
+        button.fire-btn { border-color: var(--fire); color: var(--fire); }
+        button.fire-btn:hover:not(:disabled) { background: var(--fire); color: var(--void); }
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .dispatch-queue { margin-bottom: 2rem; }
+        .section-title { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 3px; color: var(--mist); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--ember); }
 
-        /* ── HEADER ── */
-        .header {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: end;
-            border-bottom: 1px solid var(--iron);
-            padding-bottom: 1.2rem;
-            margin-bottom: 1.8rem;
-            gap: 1rem;
-        }
-        .header h1 {
-            font-family: var(--font-display);
-            font-size: 2.2rem;
-            color: var(--forge);
-            letter-spacing: 4px;
-        }
-        .header h1 span { color: var(--text); }
-        .header-sub {
-            font-family: var(--font-mono);
-            font-size: 0.5rem;
-            color: var(--muted);
-            letter-spacing: 2px;
-            margin-top: 0.3rem;
-        }
-        .telos-badge {
-            background: var(--ember);
-            border: 1px solid var(--iron);
-            border-left: 3px solid var(--forge);
-            border-radius: 6px;
-            padding: 0.6rem 0.9rem;
-            font-family: var(--font-body);
-            font-size: 0.7rem;
-            font-style: italic;
-            color: var(--text);
-            max-width: 320px;
-            line-height: 1.5;
-        }
-        .telos-label {
-            font-family: var(--font-mono);
-            font-size: 0.4rem;
-            letter-spacing: 2px;
-            color: var(--forge);
-            margin-bottom: 0.3rem;
-            font-style: normal;
-        }
+        .queue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.6rem; }
+        .queue-card { background: var(--surface); border: 1px solid var(--ember); border-radius: 6px; padding: 0.8rem; transition: all 0.2s; cursor: pointer; }
+        .queue-card:hover { border-color: var(--forge); transform: translateY(-2px); }
+        .queue-card.forging { border-color: var(--molten); animation: glow 1.5s ease-in-out infinite; }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 8px rgba(255,153,64,0.2); } 50% { box-shadow: 0 0 20px rgba(255,153,64,0.4); } }
+        .queue-prompt { font-family: var(--font-body); font-size: 0.75rem; color: var(--pale); line-height: 1.4; margin-bottom: 0.5rem; font-style: italic; }
+        .queue-meta { font-family: var(--font-mono); font-size: 0.45rem; color: var(--mist); display: flex; gap: 0.5rem; }
+        .queue-tag { padding: 0.1rem 0.3rem; border-radius: 2px; background: rgba(192,112,64,0.15); color: var(--forge); }
 
-        /* ── STATS ── */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .stat-card {
-            background: var(--coal);
-            border: 1px solid var(--iron);
-            border-radius: 6px;
-            padding: 0.6rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-        }
-        .stat-val {
-            font-family: var(--font-display);
-            font-size: 1.3rem;
-        }
-        .stat-label {
-            font-family: var(--font-mono);
-            font-size: 0.4rem;
-            color: var(--muted);
-            margin-top: 0.2rem;
-        }
+        .forge-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.8rem; margin-bottom: 2rem; }
+        .forged-card { background: var(--deep); border: 1px solid var(--ember); border-radius: 8px; overflow: hidden; transition: all 0.3s; }
+        .forged-card:hover { border-color: var(--forge-bright); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(192,112,64,0.15); }
+        .forged-card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+        .forged-card .img-placeholder { width: 100%; aspect-ratio: 1; background: linear-gradient(45deg, var(--ember), var(--slag), var(--cooling)); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--mist); }
+        .forged-info { padding: 0.6rem; }
+        .forged-prompt { font-family: var(--font-body); font-size: 0.7rem; font-style: italic; color: var(--pale); line-height: 1.3; margin-bottom: 0.4rem; }
+        .forged-meta { font-family: var(--font-mono); font-size: 0.42rem; color: var(--mist); display: flex; justify-content: space-between; }
 
-        /* ── PIPELINE STAGES ── */
-        .pipeline {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .stage {
-            background: var(--coal);
-            border: 1px solid var(--iron);
-            border-radius: 8px;
-            padding: 1rem;
-            position: relative;
-            transition: border-color 0.3s;
-        }
-        .stage.active { border-color: var(--forge); animation: flare 2s infinite; }
-        .stage.done   { border-color: var(--pass); }
-        .stage.failed { border-color: var(--fail); }
+        .log { background: var(--deep); border: 1px solid var(--ember); border-radius: 4px; padding: 0.5rem; max-height: 100px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.5rem; color: var(--mist); }
 
-        .stage-num {
-            font-family: var(--font-display);
-            font-size: 0.45rem;
-            letter-spacing: 2px;
-            color: var(--muted);
-            margin-bottom: 0.4rem;
-        }
-        .stage-name {
-            font-family: var(--font-display);
-            font-size: 0.75rem;
-            color: var(--forge);
-            margin-bottom: 0.3rem;
-        }
-        .stage-desc {
-            font-family: var(--font-mono);
-            font-size: 0.44rem;
-            color: var(--muted);
-            margin-bottom: 0.8rem;
-            line-height: 1.6;
-        }
-        .stage-counts {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-bottom: 0.6rem;
-        }
-        .stage-count {
-            font-family: var(--font-mono);
-            font-size: 0.42rem;
-            padding: 0.2rem 0.4rem;
-            border-radius: 3px;
-            background: rgba(0,0,0,0.3);
-        }
-        .stage-count.pass  { color: var(--pass);   border: 1px solid rgba(64,112,64,0.3); }
-        .stage-count.fail  { color: var(--fail);   border: 1px solid rgba(128,48,48,0.3); }
-        .stage-count.queue { color: var(--forge);  border: 1px solid rgba(192,112,64,0.3); }
-
-        /* ── SVO GATE VISUALIZER ── */
-        .svo-gate {
-            background: var(--ember);
-            border: 1px solid var(--iron);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .svo-gate-title {
-            font-family: var(--font-mono);
-            font-size: 0.48rem;
-            letter-spacing: 2px;
-            color: var(--forge);
-            margin-bottom: 0.8rem;
-        }
-        .svo-display {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr auto 1fr;
-            gap: 0.5rem;
-            align-items: center;
-        }
-        .svo-slot {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--iron);
-            border-radius: 6px;
-            padding: 0.6rem;
-            text-align: center;
-            min-height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-        .svo-slot.filled  { border-color: var(--pass); background: rgba(64,112,64,0.1); }
-        .svo-slot.missing { border-color: var(--fail); background: rgba(128,48,48,0.1); animation: pulse 1s infinite; }
-        .svo-role {
-            font-family: var(--font-mono);
-            font-size: 0.38rem;
-            color: var(--muted);
-            letter-spacing: 2px;
-        }
-        .svo-word {
-            font-family: var(--font-body);
-            font-size: 0.8rem;
-            font-style: italic;
-            color: var(--text);
-            margin-top: 0.2rem;
-        }
-        .svo-arrow {
-            font-size: 1rem;
-            color: var(--muted);
-            text-align: center;
-        }
-        .svo-verdict {
-            font-family: var(--font-display);
-            font-size: 0.55rem;
-            letter-spacing: 2px;
-            padding: 0.3rem 0.6rem;
-            border-radius: 4px;
-            margin-top: 0.6rem;
-            text-align: center;
-        }
-        .svo-verdict.pass { background: rgba(64,112,64,0.2); color: var(--pass); border: 1px solid var(--pass); }
-        .svo-verdict.fail { background: rgba(128,48,48,0.2); color: var(--fail); border: 1px solid var(--fail); }
-
-        /* ── FORGE FLOOR (concept cards) ── */
-        .forge-floor {
-            background: var(--coal);
-            border: 1px solid var(--iron);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .forge-floor-title {
-            font-family: var(--font-mono);
-            font-size: 0.48rem;
-            letter-spacing: 2px;
-            color: var(--muted);
-            margin-bottom: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .concept-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 0.5rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .concept-card {
-            background: rgba(0,0,0,0.25);
-            border: 1px solid var(--iron);
-            border-radius: 6px;
-            padding: 0.6rem;
-            animation: fadeUp 0.3s ease;
-            transition: border-color 0.2s;
-        }
-        .concept-card:hover { border-color: var(--slag); }
-        .concept-card.forged  { border-left: 3px solid var(--pass); }
-        .concept-card.returned { border-left: 3px solid var(--return); }
-        .concept-card.testing { border-left: 3px solid var(--forge); animation: pulse 1s infinite; }
-
-        .concept-body {
-            font-family: var(--font-body);
-            font-size: 0.78rem;
-            font-style: italic;
-            color: var(--text);
-            margin-bottom: 0.3rem;
-        }
-        .concept-meta {
-            font-family: var(--font-mono);
-            font-size: 0.4rem;
-            color: var(--muted);
-        }
-        .concept-verdict {
-            font-family: var(--font-mono);
-            font-size: 0.38rem;
-            margin-top: 0.3rem;
-            padding: 0.15rem 0.3rem;
-            border-radius: 3px;
-            display: inline-block;
-        }
-        .concept-verdict.pass   { background: rgba(64,112,64,0.2);  color: var(--pass); }
-        .concept-verdict.fail   { background: rgba(128,48,48,0.2);  color: var(--fail); }
-        .concept-verdict.return { background: rgba(96,64,32,0.2);   color: var(--return); }
-
-        /* ── CONTROLS ── */
-        .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
-        button {
-            font-family: var(--font-mono);
-            font-size: 0.52rem;
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-            cursor: pointer;
-            border: 1px solid var(--iron);
-            background: var(--coal);
-            color: var(--text);
-            transition: all 0.2s;
-            letter-spacing: 1px;
-        }
-        button:hover:not(:disabled) { border-color: var(--forge); color: var(--forge); }
-        button.primary { background: var(--forge); color: var(--ash); border-color: var(--forge); font-weight: 600; }
-        button.primary:hover:not(:disabled) { background: var(--forge2); }
-        button.danger  { border-color: var(--fail); color: var(--fail); }
-        button.danger:hover:not(:disabled)  { background: rgba(128,48,48,0.2); }
-        button:disabled { opacity: 0.35; cursor: not-allowed; }
-        .spin { display: inline-block; animation: spin 0.6s linear infinite; }
-        .hammer-anim { display: inline-block; animation: hammer 0.4s ease infinite; }
-
-        /* ── REJECTION LOG ── */
-        .rejection-panel {
-            background: var(--coal);
-            border: 1px solid var(--iron);
-            border-left: 3px solid var(--fail);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        .rejection-title {
-            font-family: var(--font-mono);
-            font-size: 0.48rem;
-            letter-spacing: 2px;
-            color: var(--fail);
-            margin-bottom: 0.6rem;
-        }
-        .rejection-log {
-            background: rgba(0,0,0,0.3);
-            border-radius: 4px;
-            padding: 0.4rem;
-            max-height: 120px;
-            overflow-y: auto;
-            font-family: var(--font-mono);
-            font-size: 0.44rem;
-        }
-        .rejection-entry {
-            padding: 0.2rem 0.3rem;
-            border-bottom: 1px solid rgba(58,42,24,0.4);
-            color: var(--muted);
-        }
-        .rejection-entry .reason { color: var(--fail); }
-
-        /* ── MAIN LOG ── */
-        .log-panel {
-            background: var(--coal);
-            border: 1px solid var(--iron);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .log-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0.8rem;
-            border-bottom: 1px solid var(--iron);
-            background: rgba(0,0,0,0.2);
-        }
-        .log-title { font-family: var(--font-mono); font-size: 0.48rem; letter-spacing: 2px; color: var(--muted); }
-        .log-body {
-            padding: 0.4rem;
-            max-height: 140px;
-            overflow-y: auto;
-            font-family: var(--font-mono);
-            font-size: 0.46rem;
-        }
-        .log-entry { padding: 0.18rem 0.3rem; border-bottom: 1px solid rgba(46,32,24,0.3); color: var(--muted); }
-        .log-entry.ok     { color: var(--pass); }
-        .log-entry.err    { color: var(--fail); }
-        .log-entry.forge  { color: var(--forge); }
-        .log-entry.return { color: var(--return); }
-
-        @media (max-width: 900px) {
-            .stats-grid { grid-template-columns: repeat(3, 1fr); }
-            .pipeline   { grid-template-columns: 1fr; }
-            .svo-display { grid-template-columns: 1fr; }
-            .svo-arrow   { display: none; }
+        @media (max-width: 768px) { 
+            .queue-grid, .forge-gallery { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
-
-<!-- Cinder particles -->
-<div class="cinders" id="cinders"></div>
-
 <div class="container">
 
     <div class="header">
-        <div>
-            <h1>🔨 HEPHAE<span>STUS</span></h1>
-            <div class="header-sub">THE COHERENCE FORGE · DOMAIN: FORGE · PYTHAGOREAN #6 · THE HEXAD</div>
-        </div>
-        <div class="telos-badge">
-            <div class="telos-label">TELOS</div>
-            I forge only what holds together. A concept without subject, verb, and object is rubble — and rubble I return. What passes my gate may bear weight. What fails goes back to Hermes, marked.
-        </div>
+        <div class="anvil-icon">🔨</div>
+        <h1>HEPHA<span style="color:var(--molten)">EST</span>US</h1>
+        <div class="header-sub">IMAGE FORGE · POLLINATIONS.AI · DEMETER'S PROMPTS → FORGED IMAGES</div>
     </div>
 
-    <!-- STATS -->
-    <div class="stats-grid" id="statsGrid">
-        <div class="stat-card" style="--c:var(--steel)">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--steel)"></div>
-            <div class="stat-val" style="color:var(--steel)" id="statRaw">—</div>
-            <div class="stat-label">Raw Reflexes</div>
-        </div>
-        <div class="stat-card">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--forge)"></div>
-            <div class="stat-val" style="color:var(--forge)" id="statCrafts">—</div>
-            <div class="stat-label">Crafts (4-8w)</div>
-        </div>
-        <div class="stat-card">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--pass)"></div>
-            <div class="stat-val" style="color:var(--pass)" id="statForged">—</div>
-            <div class="stat-label">Forged (SVO ✓)</div>
-        </div>
-        <div class="stat-card">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--fail)"></div>
-            <div class="stat-val" style="color:var(--fail)" id="statRejected">—</div>
-            <div class="stat-label">Returned to Hermes</div>
-        </div>
-        <div class="stat-card">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--glow)"></div>
-            <div class="stat-val" style="color:var(--glow)" id="statSVO">—</div>
-            <div class="stat-label">SVO Triplets</div>
-        </div>
-        <div class="stat-card">
-            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--cold)"></div>
-            <div class="stat-val" style="color:var(--cold)" id="statDispatch">—</div>
-            <div class="stat-label">Sent to Demeter</div>
-        </div>
+    <div class="status-bar">
+        <div>Queue: <span id="queueCount">—</span></div>
+        <div>Forged: <span id="forgedCount">0</span></div>
+        <div>Edge: <span id="edgeStatus"><span class="badge badge-live">checking</span></span></div>
     </div>
 
-    <!-- PIPELINE STAGES -->
-    <div class="pipeline">
-        <div class="stage" id="stage0">
-            <div class="stage-num">STAGE 0 · INTAKE</div>
-            <div class="stage-name">⚡ Claim Reflexes</div>
-            <div class="stage-desc">Pull 1-3 word tokens from Hermes.<br>These are the raw ore — unformed, unchained.</div>
-            <div class="stage-counts">
-                <span class="stage-count queue" id="s0queue">— waiting</span>
-            </div>
-        </div>
-        <div class="stage" id="stage1">
-            <div class="stage-num">STAGE 1 · CRAFTING</div>
-            <div class="stage-name">🔥 Forge Crafts</div>
-            <div class="stage-desc">Combine reflexes into 4-8 word crafts.<br>Test for connective tissue. Weak joins are marked.</div>
-            <div class="stage-counts">
-                <span class="stage-count pass" id="s1pass">— passed</span>
-                <span class="stage-count fail" id="s1fail">— weak</span>
-            </div>
-        </div>
-        <div class="stage" id="stage2">
-            <div class="stage-num">STAGE 2 · THE GATE</div>
-            <div class="stage-name">🔨 SVO Gate</div>
-            <div class="stage-desc">Full S-V-O test. No exceptions.<br>Pass → svo_triplets. Fail → returned to Hermes, marked.</div>
-            <div class="stage-counts">
-                <span class="stage-count pass" id="s2pass">— forged</span>
-                <span class="stage-count fail" id="s2fail">— returned</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- SVO GATE VISUALIZER -->
-    <div class="svo-gate">
-        <div class="svo-gate-title">⚖️ SVO GATE · LAST TESTED CONSTRUCT</div>
-        <div class="svo-display">
-            <div class="svo-slot" id="svoS">
-                <div class="svo-role">SUBJECT</div>
-                <div class="svo-word" id="svoSWord">—</div>
-            </div>
-            <div class="svo-arrow">→</div>
-            <div class="svo-slot" id="svoV">
-                <div class="svo-role">VERB</div>
-                <div class="svo-word" id="svoVWord">—</div>
-            </div>
-            <div class="svo-arrow">→</div>
-            <div class="svo-slot" id="svoO">
-                <div class="svo-role">OBJECT</div>
-                <div class="svo-word" id="svoOWord">—</div>
-            </div>
-        </div>
-        <div id="svoVerdict" class="svo-verdict" style="display:none"></div>
-    </div>
-
-    <!-- CONTROLS -->
     <div class="controls">
-        <button id="btnFull" class="primary">🔨 Run Full Forge</button>
-        <button id="btn0">⚡ Stage 0: Claim Reflexes</button>
-        <button id="btn1">🔥 Stage 1: Forge Crafts</button>
-        <button id="btn2">⚖️ Stage 2: SVO Gate</button>
-        <button id="btnClear" class="danger">🗑️ Clear Forge</button>
+        <button id="forgeBtn" class="primary">🔨 Forge Images</button>
+        <button id="forgeAllBtn" class="fire-btn">🔥 Forge All Pending</button>
+        <button id="refreshBtn">🔄 Refresh</button>
     </div>
 
-    <!-- FORGE FLOOR -->
-    <div class="forge-floor">
-        <div class="forge-floor-title">
-            <span>🔥 FORGE FLOOR · LIVE OUTPUT</span>
-            <span id="floorCount" style="color:var(--muted)">0 concepts</span>
-        </div>
-        <div class="concept-grid" id="conceptGrid">
-            <div style="font-family:var(--font-mono);font-size:0.48rem;color:var(--muted);padding:1rem;grid-column:1/-1;text-align:center;font-style:italic;">
-                The forge awaits. Run the pipeline to begin.
-            </div>
+    <div class="dispatch-queue">
+        <div class="section-title">⚒️ DISPATCH QUEUE · FROM DEMETER'S GARDEN</div>
+        <div class="queue-grid" id="queueGrid">
+            <div class="queue-card"><div class="queue-prompt">No prompts in queue. Demeter must cultivate first.</div></div>
         </div>
     </div>
 
-    <!-- REJECTION LOG -->
-    <div class="rejection-panel">
-        <div class="rejection-title">↩ RETURNED TO HERMES · REJECTION LEDGER</div>
-        <div class="rejection-log" id="rejectionLog">
-            <div class="rejection-entry" style="color:var(--muted);font-style:italic;">No rejections yet. The gate has not been tested.</div>
+    <div class="dispatch-queue">
+        <div class="section-title">🖼️ FORGED IMAGES</div>
+        <div class="forge-gallery" id="forgeGallery">
+            <div class="forged-card"><div class="img-placeholder">No images forged yet</div></div>
         </div>
     </div>
 
-    <!-- SYSTEM LOG -->
-    <div class="log-panel">
-        <div class="log-header">
-            <span class="log-title">📋 FORGE LOG</span>
-            <button onclick="document.getElementById('forgeLog').innerHTML=''" style="font-size:0.4rem;padding:0.18rem 0.4rem;">clear</button>
-        </div>
-        <div class="log-body" id="forgeLog">
-            <div class="log-entry forge">🔨 Hephaestus — Pythagorean #6, the Hexad. The coherence forge is cold. Run the pipeline.</div>
-        </div>
-    </div>
+    <div class="log" id="log"><div>🔨 Hephaestus Forge ready. Awaiting Demeter's prompts.</div></div>
 
 </div>
 
-<script>
-// ════════════════════════════════════════════════
-// CONFIG
-// ════════════════════════════════════════════════
+<script type="module">
 const KAIROS_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
 const KAIROS_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
+const EDGE_URL = `${KAIROS_URL}/functions/v1/hephaestus-forge`;
 const sb = window.supabase.createClient(KAIROS_URL, KAIROS_KEY);
 
-// ════════════════════════════════════════════════
-// CINDER PARTICLES
-// ════════════════════════════════════════════════
-function initCinders() {
-    const container = document.getElementById('cinders');
-    for (let i = 0; i < 18; i++) {
-        const c = document.createElement('div');
-        c.className = 'cinder';
-        c.style.left   = `${Math.random() * 100}%`;
-        c.style.bottom = `${Math.random() * 30}%`;
-        c.style.animationDuration  = `${3 + Math.random() * 5}s`;
-        c.style.animationDelay     = `${Math.random() * 6}s`;
-        c.style.opacity = '0';
-        container.appendChild(c);
-    }
+let forgedTotal = 0;
+
+function log(msg) {
+    const el = document.getElementById('log');
+    el.innerHTML = `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>` + el.innerHTML;
 }
 
-// ════════════════════════════════════════════════
-// LOGGING
-// ════════════════════════════════════════════════
-function log(msg, type = 'info') {
-    const el = document.getElementById('forgeLog');
-    const d = document.createElement('div');
-    d.className = `log-entry ${type}`;
-    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    el.insertBefore(d, el.firstChild);
-    while (el.children.length > 60) el.removeChild(el.lastChild);
+async function checkEdge() {
+    try {
+        const res = await fetch(EDGE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'status' }) });
+        const el = document.getElementById('edgeStatus');
+        if (res.ok) { el.innerHTML = '<span class="badge badge-live">live ✓</span>'; log('Edge function live ✓'); }
+        else { el.innerHTML = '<span class="badge badge-hot">offline</span>'; log('Edge offline'); }
+    } catch { document.getElementById('edgeStatus').innerHTML = '<span class="badge badge-hot">offline</span>'; }
 }
 
-function logRejection(body, reason) {
-    const el = document.getElementById('rejectionLog');
-    // Clear placeholder
-    const placeholder = el.querySelector('[style*="font-style:italic"]');
-    if (placeholder) placeholder.remove();
-
-    const d = document.createElement('div');
-    d.className = 'rejection-entry';
-    d.innerHTML = `<span style="color:var(--text)">"${esc(body)}"</span> — <span class="reason">${esc(reason)}</span>`;
-    el.insertBefore(d, el.firstChild);
-    while (el.children.length > 30) el.removeChild(el.lastChild);
-}
-
-function esc(s) {
-    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-}
-
-// ════════════════════════════════════════════════
-// STAGE STATE
-// ════════════════════════════════════════════════
-let stageStats = { s1pass: 0, s1fail: 0, s2pass: 0, s2fail: 0 };
-let floorItems = [];
-
-function setStage(id, state) {
-    const el = document.getElementById(id);
-    el.classList.remove('active', 'done', 'failed');
-    if (state) el.classList.add(state);
-}
-
-function updateStageCounters() {
-    document.getElementById('s1pass').textContent = `${stageStats.s1pass} passed`;
-    document.getElementById('s1fail').textContent = `${stageStats.s1fail} weak`;
-    document.getElementById('s2pass').textContent = `${stageStats.s2pass} forged`;
-    document.getElementById('s2fail').textContent = `${stageStats.s2fail} returned`;
-}
-
-// ════════════════════════════════════════════════
-// SVO GATE — THE HEART OF HEPHAESTUS
-// ════════════════════════════════════════════════
-
-// Linguistic dictionaries for SVO detection
-const VERBS = new Set([
-    'is','are','was','were','be','been','being',
-    'has','have','had','does','do','did',
-    'becomes','become','became','makes','make','made',
-    'creates','create','created','builds','build','built',
-    'flows','flow','flowed','grows','grow','grew',
-    'holds','hold','held','bears','bear','bore',
-    'reveals','reveal','revealed','transforms','transform',
-    'emerges','emerge','emerged','forges','forge','forged',
-    'integrates','integrate','integrated','resonates','resonate',
-    'grounds','ground','grounded','shapes','shape','shaped',
-    'drives','drive','drove','generates','generate','generated',
-    'produces','produce','produced','sustains','sustain',
-    'contains','contain','contained','carries','carry','carried',
-    'forms','form','formed','binds','bind','bound',
-    'moves','move','moved','acts','act','acted',
-    'reaches','reach','reached','seeks','seek','sought',
-    'calls','call','called','knows','know','knew',
-    'finds','find','found','sees','see','saw',
-    'gives','give','gave','takes','take','took',
-    'yields','yield','yielded','breaks','break','broke',
-    'passes','pass','passed','fails','fail','failed',
-    'returns','return','returned','marks','mark','marked',
-    'tests','test','tested','proves','prove','proved',
-    'serves','serve','served','feeds','feed','fed',
-    'opens','open','opened','closes','close','closed',
-    'becomes','turn','turns','turned','grows','grew',
-]);
-
-const NOUNS_INDICATORS = new Set([
-    'the','a','an','this','that','these','those',
-    'its','their','our','your','his','her','my',
-    'which','what','who','it',
-]);
-
-const FUNCTION_WORDS = new Set([
-    'of','in','on','at','by','for','with','from','to','into',
-    'through','between','among','within','without','across',
-    'and','or','but','nor','yet','so',
-    'when','while','as','because','since','although','though',
-    'if','unless','until','after','before',
-]);
-
-/**
- * testSVO — the gate itself.
- * Returns { subject, verb, object, passed, reason }
- *
- * Hephaestus's question:
- *   "Do you have something that acts,
- *    something that moves,
- *    and something that receives?"
- */
-function testSVO(sentence) {
-    const words = sentence.toLowerCase()
-        .replace(/[^a-z\s']/g, '')
-        .split(/\s+/)
-        .filter(Boolean);
-
-    if (words.length < 3) {
-        return { passed: false, reason: 'too short to hold structure', subject: null, verb: null, object: null };
-    }
-
-    // Find first verb
-    let verbIdx = -1;
-    let verbWord = null;
-    for (let i = 0; i < words.length; i++) {
-        if (VERBS.has(words[i])) {
-            verbIdx = i;
-            verbWord = words[i];
-            break;
-        }
-    }
-
-    if (verbIdx === -1) {
-        return { passed: false, reason: 'no verb found — nothing moves', subject: null, verb: null, object: null };
-    }
-
-    // Subject: longest noun-like phrase before verb
-    const preVerb = words.slice(0, verbIdx).filter(w => !FUNCTION_WORDS.has(w));
-    if (preVerb.length === 0) {
-        return { passed: false, reason: 'no subject before verb — nothing acts', subject: null, verb: verbWord, object: null };
-    }
-    const subject = preVerb.slice(-2).join(' '); // take up to 2 words as subject phrase
-
-    // Object: meaningful content after verb
-    const postVerb = words.slice(verbIdx + 1).filter(w => !FUNCTION_WORDS.has(w) && w.length > 2);
-    if (postVerb.length === 0) {
-        return { passed: false, reason: 'no object after verb — nothing receives', subject, verb: verbWord, object: null };
-    }
-    const object = postVerb.slice(0, 2).join(' ');
-
-    return { passed: true, reason: 'coherent — subject acts, verb moves, object receives', subject, verb: verbWord, object };
-}
-
-function displaySVOResult(body, result) {
-    const sS = document.getElementById('svoS');
-    const sV = document.getElementById('svoV');
-    const sO = document.getElementById('svoO');
-
-    sS.className = 'svo-slot ' + (result.subject ? 'filled' : 'missing');
-    sV.className = 'svo-slot ' + (result.verb    ? 'filled' : 'missing');
-    sO.className = 'svo-slot ' + (result.object  ? 'filled' : 'missing');
-
-    document.getElementById('svoSWord').textContent = result.subject || '∅';
-    document.getElementById('svoVWord').textContent = result.verb    || '∅';
-    document.getElementById('svoOWord').textContent = result.object  || '∅';
-
-    const verdict = document.getElementById('svoVerdict');
-    verdict.style.display = 'block';
-    verdict.className = 'svo-verdict ' + (result.passed ? 'pass' : 'fail');
-    verdict.textContent = result.passed
-        ? `✓ FORGED — ${result.reason}`
-        : `✕ RETURNED — ${result.reason}`;
-}
-
-// ════════════════════════════════════════════════
-// FORGE FLOOR RENDER
-// ════════════════════════════════════════════════
-function addToFloor(body, status, meta) {
-    floorItems.unshift({ body, status, meta });
-    if (floorItems.length > 40) floorItems.pop();
-    renderFloor();
-}
-
-function renderFloor() {
-    const grid = document.getElementById('conceptGrid');
-    document.getElementById('floorCount').textContent = `${floorItems.length} concepts`;
-
-    if (!floorItems.length) {
-        grid.innerHTML = '<div style="font-family:var(--font-mono);font-size:0.48rem;color:var(--muted);padding:1rem;grid-column:1/-1;text-align:center;">The forge awaits.</div>';
+async function loadQueue() {
+    const { data, count } = await sb.from('hephaestus_dispatch')
+        .select('*', { count: 'exact' }).eq('status', 'pending').order('priority', { ascending: false }).limit(12);
+    
+    document.getElementById('queueCount').textContent = count || 0;
+    
+    const grid = document.getElementById('queueGrid');
+    if (!data?.length) {
+        grid.innerHTML = '<div class="queue-card"><div class="queue-prompt">No prompts waiting. Cultivate in Demeter first.</div></div>';
         return;
     }
-
-    grid.innerHTML = floorItems.map(item => `
-        <div class="concept-card ${item.status}">
-            <div class="concept-body">${esc(item.body)}</div>
-            <div class="concept-meta">${item.meta}</div>
-            <div class="concept-verdict ${item.status === 'forged' ? 'pass' : item.status === 'returned' ? 'fail' : 'return'}">
-                ${item.status === 'forged' ? '✓ FORGED' : item.status === 'returned' ? '↩ RETURNED' : '⟳ TESTING'}
+    
+    grid.innerHTML = data.map(d => `
+        <div class="queue-card">
+            <div class="queue-prompt">${(d.demeter_prompt_id || 'Unknown prompt').substring(0, 120)}</div>
+            <div class="queue-meta">
+                <span>Priority: ${d.priority || '—'}</span>
+                <span class="queue-tag">${d.source || 'demeter'}</span>
             </div>
         </div>
     `).join('');
 }
 
-// ════════════════════════════════════════════════
-// DB STATS
-// ════════════════════════════════════════════════
-async function updateStats() {
+async function loadForged() {
+    const { data, count } = await sb.from('hephaestus_images')
+        .select('*').order('created_at', { ascending: false }).limit(20);
+    
+    document.getElementById('forgedCount').textContent = count || 0;
+    forgedTotal = count || 0;
+    
+    const gallery = document.getElementById('forgeGallery');
+    if (!data?.length) {
+        gallery.innerHTML = '<div class="forged-card"><div class="img-placeholder">No images forged yet</div></div>';
+        return;
+    }
+    
+    gallery.innerHTML = data.map(img => `
+        <div class="forged-card">
+            <img src="${img.image_url}" alt="${img.prompt_text}" loading="lazy" onerror="this.parentElement.querySelector('.img-placeholder').style.display='flex';this.style.display='none';">
+            <div class="img-placeholder" style="display:none">Forging...</div>
+            <div class="forged-info">
+                <div class="forged-prompt">${(img.prompt_text || '').substring(0, 100)}</div>
+                <div class="forged-meta">
+                    <span>${img.style || ''}</span>
+                    <span>${img.aspect_ratio || '1:1'}</span>
+                </div>
+            </div>
+            </div>
+    `).join('');
+}
+
+async function forgeImages() {
+    log('🔨 Forging images via Edge...');
+    
+    const btn = document.getElementById('forgeBtn');
+    btn.disabled = true;
+    btn.textContent = '⚒️ Forging...';
+    
     try {
-        const [raw, crafts, svo, dispatch] = await Promise.all([
-            sb.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'hermes').eq('state', 'raw'),
-            sb.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'hephaestus'),
-            sb.from('svo_triplets').select('*', { count: 'exact', head: true }),
-            sb.from('concepts').select('*', { count: 'exact', head: true }).eq('band', 'demeter'),
-        ]);
-        document.getElementById('statRaw').textContent     = raw.count     || 0;
-        document.getElementById('statCrafts').textContent  = crafts.count  || 0;
-        document.getElementById('statSVO').textContent     = svo.count     || 0;
-        document.getElementById('statDispatch').textContent = dispatch.count || 0;
-        document.getElementById('s0queue').textContent     = `${raw.count || 0} waiting`;
-
-        // Forged / rejected counts from svo_triplets
-        const { count: forgedCount } = await sb.from('svo_triplets').select('*', { count: 'exact', head: true });
-        document.getElementById('statForged').textContent   = forgedCount || 0;
-
-        const { count: rejectedCount } = await sb.from('concepts').select('*', { count: 'exact', head: true })
-            .eq('source', 'rejected_by_hephaestus');
-        document.getElementById('statRejected').textContent = rejectedCount || 0;
-    } catch (e) {
-        log(`Stats error: ${e.message}`, 'err');
-    }
-}
-
-// ════════════════════════════════════════════════
-// STAGE 0 — CLAIM HERMES REFLEXES
-// ════════════════════════════════════════════════
-async function stage0() {
-    setStage('stage0', 'active');
-    log('⚡ Claiming reflexes from Hermes...', 'forge');
-
-    const { data: tokens, error } = await sb
-        .from('concepts')
-        .select('id, body, score, generation, word_count')
-        .eq('band', 'hermes')
-        .eq('state', 'raw')
-        .order('score', { ascending: false })
-        .limit(40);
-
-    if (error || !tokens?.length) {
-        log(`⚡ No raw reflexes. Run Hermes first.`, 'err');
-        setStage('stage0', 'failed');
-        return [];
-    }
-
-    log(`⚡ Claimed ${tokens.length} raw reflexes from Hermes.`, 'ok');
-    setStage('stage0', 'done');
-    await updateStats();
-    return tokens;
-}
-
-// ════════════════════════════════════════════════
-// STAGE 1 — FORGE CRAFTS (4-8 words)
-// ════════════════════════════════════════════════
-
-// Craft templates — scaffolds for building connective tissue
-const CRAFT_TEMPLATES = [
-    (a, b) => `${a} that ${b}`,
-    (a, b) => `${a} becomes ${b}`,
-    (a, b) => `${a} holds ${b}`,
-    (a, b) => `${a} through ${b}`,
-    (a, b) => `the ${a} bears ${b}`,
-    (a, b) => `when ${a} meets ${b}`,
-    (a, b) => `${a} forges ${b}`,
-    (a, b) => `${a} feeds ${b}`,
-    (a, b) => `${a} breaks ${b}`,
-    (a, b) => `${a} carries ${b}`,
-    (a, b) => `${a} drives ${b}`,
-    (a, b) => `${a} reveals ${b}`,
-];
-
-async function stage1(reflexes) {
-    if (!reflexes?.length) { log('Stage 1 needs reflexes.', 'err'); return []; }
-    setStage('stage1', 'active');
-    log('🔥 Forging crafts from reflexes...', 'forge');
-
-    stageStats.s1pass = 0;
-    stageStats.s1fail = 0;
-
-    const crafts = [];
-    const used = new Set();
-
-    for (let i = 0; i < 24; i++) {
-        const a = reflexes[Math.floor(Math.random() * reflexes.length)];
-        const b = reflexes[Math.floor(Math.random() * reflexes.length)];
-        if (a.id === b.id) continue;
-
-        const tmpl = CRAFT_TEMPLATES[Math.floor(Math.random() * CRAFT_TEMPLATES.length)];
-        const craft = tmpl(a.body, b.body).toLowerCase().trim();
-        const wc = craft.split(/\s+/).length;
-
-        if (wc < 4 || wc > 8 || used.has(craft)) continue;
-        used.add(craft);
-
-        // Light coherence check: does it have at least a verb?
-        const hasVerb = craft.split(/\s+/).some(w => VERBS.has(w));
-        if (!hasVerb) {
-            stageStats.s1fail++;
-            addToFloor(craft, 'returned', `wc:${wc} · no verb structure`);
-            log(`  ✗ Weak: "${craft}" — no connective verb`, 'return');
-            continue;
-        }
-
-        stageStats.s1pass++;
-        const avgScore = Math.round((a.score + b.score) / 2) + 5;
-        const { error } = await sb.from('concepts').insert({
-            body: craft,
-            band: 'hephaestus',
-            source: 'forge_stage1',
-            score: Math.min(100, avgScore),
-            word_type: 'craft',
-            word_count: wc,
-            metadata: { word_count: wc, parents: [a.id, b.id] },
-            expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
-            created_at: new Date().toISOString(),
-            generation: Math.max(a.generation || 1, b.generation || 1) + 1,
-            parent_ids: [a.id, b.id],
-            mutation_count: 0
+        const res = await fetch(EDGE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'forge', limit: 3 })
         });
-
-        if (!error) {
-            crafts.push({ body: craft, score: avgScore });
-            addToFloor(craft, 'forged', `wc:${wc} · craft stage`);
+        
+        const result = await res.json();
+        
+        if (result.success && result.images_forged > 0) {
+            log(`✅ Forged ${result.images_forged} images → dispatched to Hera`);
+            await loadQueue();
+            await loadForged();
+        } else {
+            log(result.message || 'No images forged — check Demeter queue');
         }
+    } catch (err) {
+        log(`❌ Forge failed: ${err.message}`);
     }
-
-    updateStageCounters();
-    log(`🔥 Stage 1: ${stageStats.s1pass} crafts forged, ${stageStats.s1fail} weak.`, stageStats.s1pass > 0 ? 'ok' : 'err');
-    setStage('stage1', stageStats.s1pass > 0 ? 'done' : 'failed');
-    await updateStats();
-    return crafts;
+    
+    btn.disabled = false;
+    btn.textContent = '🔨 Forge Images';
 }
 
-// ════════════════════════════════════════════════
-// STAGE 2 — SVO GATE → svo_triplets
-// ════════════════════════════════════════════════
-
-// Construct templates — longer, more complex
-const CONSTRUCT_TEMPLATES = [
-    (a, b) => `the ${a} forges ${b} into coherent form`,
-    (a, b) => `when ${a} holds ${b}, structure becomes possible`,
-    (a, b) => `${a} reveals ${b} as the ground of meaning`,
-    (a, b) => `${a} carries ${b} through the test of weight`,
-    (a, b) => `what ${a} builds, ${b} inherits as its form`,
-    (a, b) => `${a} breaks ${b} down until only structure remains`,
-    (a, b) => `the forge of ${a} produces ${b} as its first truth`,
-    (a, b) => `${a} drives ${b} toward its own completion`,
-    (a, b) => `${a} tests ${b} at the gate before it may pass`,
-    (a, b) => `${a} feeds ${b} back to hermes, marked and counted`,
-];
-
-async function stage2() {
-    setStage('stage2', 'active');
-    log('⚖️ Running SVO gate on constructs...', 'forge');
-
-    const { data: crafts } = await sb
-        .from('concepts')
-        .select('id, body, score, generation')
-        .eq('band', 'hephaestus')
-        .order('score', { ascending: false })
-        .limit(30);
-
-    if (!crafts?.length) {
-        log('⚖️ No crafts to test. Run Stage 1 first.', 'err');
-        setStage('stage2', 'failed');
-        return 0;
-    }
-
-    stageStats.s2pass = 0;
-    stageStats.s2fail = 0;
-
-    const used = new Set();
-
-    for (let i = 0; i < 16; i++) {
-        const a = crafts[Math.floor(Math.random() * crafts.length)];
-        const b = crafts[Math.floor(Math.random() * crafts.length)];
-        if (a.id === b.id) continue;
-
-        const tmpl = CONSTRUCT_TEMPLATES[Math.floor(Math.random() * CONSTRUCT_TEMPLATES.length)];
-        const construct = tmpl(a.body, b.body).toLowerCase().trim();
-        const wc = construct.split(/\s+/).length;
-
-        if (wc < 9 || wc > 18 || used.has(construct)) continue;
-        used.add(construct);
-
-        // Mark as testing on floor
-        addToFloor(construct, 'testing', `wc:${wc} · testing SVO`);
-
-        // THE GATE
-        const svo = testSVO(construct);
-        displaySVOResult(construct, svo);
-
-        if (!svo.passed) {
-            // RETURN TO HERMES — marked
-            stageStats.s2fail++;
-            logRejection(construct, svo.reason);
-            log(`  ↩ RETURNED: "${construct.substring(0,50)}..." — ${svo.reason}`, 'return');
-
-            await sb.from('concepts').insert({
-                body: construct,
-                band: 'hermes',
-                source: 'rejected_by_hephaestus',
-                state: 'returned',
-                score: 10,
-                word_count: wc,
-                metadata: {
-                    rejection_reason: svo.reason,
-                    subject_found: svo.subject,
-                    verb_found: svo.verb,
-                    object_found: svo.object,
-                    returned_at: new Date().toISOString()
-                },
-                created_at: new Date().toISOString(),
-                expires_at: new Date(Date.now() + 3 * 86400000).toISOString(),
+async function forgeAll() {
+    log('🔥 Forging ALL pending...');
+    const btn = document.getElementById('forgeAllBtn');
+    btn.disabled = true;
+    btn.textContent = '🔥 Forging...';
+    
+    let total = 0;
+    let hasMore = true;
+    
+    while (hasMore) {
+        try {
+            const res = await fetch(EDGE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'forge', limit: 5 })
             });
-
-            // Update floor card
-            floorItems[0].status = 'returned';
-            renderFloor();
-            continue;
-        }
-
-        // PASS THE GATE → write to svo_triplets
-        stageStats.s2pass++;
-        const avgScore = Math.round((a.score + b.score) / 2) + 10;
-
-        const { error } = await sb.from('svo_triplets').insert({
-            subject:   svo.subject,
-            verb:      svo.verb,
-            object:    svo.object,
-            full_text: construct,
-            score:     Math.min(100, avgScore),
-            state:     'forged',
-            source:    'hephaestus_gate',
-            domain:    'forge',
-            created_at: new Date().toISOString(),
-            metadata: {
-                word_count: wc,
-                parent_crafts: [a.id, b.id],
-                svo_analysis: { subject: svo.subject, verb: svo.verb, object: svo.object }
+            const result = await res.json();
+            if (result.success && result.images_forged > 0) {
+                total += result.images_forged;
+            } else {
+                hasMore = false;
             }
-        });
-
-        if (!error) {
-            log(`  ✓ FORGED: "${construct.substring(0,50)}..."`, 'ok');
-            log(`    S:"${svo.subject}" V:"${svo.verb}" O:"${svo.object}"`, 'ok');
-            floorItems[0].status = 'forged';
-            renderFloor();
-        }
-
-        // Small delay so the SVO visualizer is readable
-        await new Promise(r => setTimeout(r, 300));
+        } catch { hasMore = false; }
     }
-
-    updateStageCounters();
-    log(`⚖️ Gate complete: ${stageStats.s2pass} forged, ${stageStats.s2fail} returned.`, stageStats.s2pass > 0 ? 'ok' : 'err');
-    setStage('stage2', stageStats.s2pass > 0 ? 'done' : 'failed');
-    await updateStats();
-    return stageStats.s2pass;
+    
+    log(`🔥 Forged ${total} images total → Hera dispatch`);
+    await loadQueue();
+    await loadForged();
+    
+    btn.disabled = false;
+    btn.textContent = '🔥 Forge All Pending';
 }
 
-// ════════════════════════════════════════════════
-// FULL PIPELINE
-// ════════════════════════════════════════════════
-async function runFull() {
-    setBtns(true);
-    log('🔨 Full forge pipeline initiated.', 'forge');
-    const reflexes = await stage0();
-    if (!reflexes.length) { setBtns(false); return; }
-    await stage1(reflexes);
-    await stage2();
-    await archiveSelf();
-    log('🔨 Forge complete. The gate has spoken.', 'forge');
-    setBtns(false);
-}
-
-// ════════════════════════════════════════════════
-// ARCHIVE SELF TO HTML TABLE
-// ════════════════════════════════════════════════
 async function archiveSelf() {
     try {
-        const html = document.documentElement.outerHTML;
         await sb.from('html').upsert({
-            filename: 'hephaestus.html',
-            title: '🔨 Hephaestus · The Coherence Forge',
-            type: 'chthonic',
-            content: html,
-            description: 'Forges SVO-coherent constructs from Hermes reflexes. Rejects incoherent structures back to Hermes marked. Writes passing constructs to svo_triplets.',
-            reads_from: ['concepts'],
-            writes_to: ['concepts', 'svo_triplets'],
-            models_used: [],
-            url: window.location.href,
-            updated_at: new Date().toISOString()
+            filename: 'hephaestus.html', title: '🔨 Hephaestus · Image Forge', type: 'olympian',
+            content: document.documentElement.outerHTML.substring(0, 5000),
+            description: 'Image forge: Demeter prompts → Pollinations.ai → Hera curation.',
+            edge_functions: ['hephaestus-forge'],
+            reads_from: ['hephaestus_dispatch', 'demeter_prompts'],
+            writes_to: ['hephaestus_images', 'hera_dispatch'],
+            url: window.location.href, updated_at: new Date().toISOString()
         }, { onConflict: 'filename' });
-        log('Archived to html table.', 'ok');
-    } catch (e) { log(`Archive failed: ${e.message}`, 'err'); }
+    } catch {}
 }
 
-// ════════════════════════════════════════════════
-// CLEAR
-// ════════════════════════════════════════════════
-async function clearForge() {
-    if (!confirm('Clear all Hephaestus crafts and SVO triplets?')) return;
-    await Promise.all([
-        sb.from('concepts').delete().eq('band', 'hephaestus'),
-        sb.from('concepts').delete().eq('source', 'rejected_by_hephaestus'),
-        sb.from('svo_triplets').delete().eq('source', 'hephaestus_gate'),
-    ]);
-    floorItems = [];
-    renderFloor();
-    stageStats = { s1pass: 0, s1fail: 0, s2pass: 0, s2fail: 0 };
-    updateStageCounters();
-    ['stage0','stage1','stage2'].forEach(s => setStage(s, null));
-    await updateStats();
-    log('🗑️ Forge cleared.', 'err');
-}
-
-function setBtns(disabled) {
-    ['btnFull','btn0','btn1','btn2','btnClear'].forEach(id => {
-        document.getElementById(id).disabled = disabled;
-    });
-    document.getElementById('btnFull').innerHTML = disabled
-        ? '<span class="hammer-anim">🔨</span> Forging...'
-        : '🔨 Run Full Forge';
-}
-
-// ════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════
 function init() {
-    initCinders();
-    updateStats();
-
-    document.getElementById('btnFull').onclick  = runFull;
-    document.getElementById('btn0').onclick     = stage0;
-    document.getElementById('btn1').onclick     = async () => { const r = await stage0(); await stage1(r); };
-    document.getElementById('btn2').onclick     = stage2;
-    document.getElementById('btnClear').onclick = clearForge;
-
+    document.getElementById('forgeBtn').onclick = forgeImages;
+    document.getElementById('forgeAllBtn').onclick = forgeAll;
+    document.getElementById('refreshBtn').onclick = () => { loadQueue(); loadForged(); };
+    
+    checkEdge();
+    loadQueue();
+    loadForged();
     setTimeout(archiveSelf, 3000);
-    log('🔨 Hephaestus — Pythagorean #6, the Hexad. The coherence forge is ready.', 'forge');
+    log('🔨 Forge ready. Awaiting Demeter\'s cultivated prompts.');
 }
-
 init();
 </script>
 </body>

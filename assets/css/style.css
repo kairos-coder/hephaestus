@@ -1,0 +1,48 @@
+/* hephaestus/assets/css/style.css */
+
+body {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #f59e0b;
+  border-radius: 3px;
+}
+
+.forge-glow {
+  box-shadow: 0 0 60px rgba(249, 115, 22, 0.35);
+}
+
+.schematic {
+  background: #1c1408;
+  border: 1px solid #b45309;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+  animation: schematicGlow 3s infinite alternate;
+}
+
+.schematic.active {
+  border-color: #fbbf24;
+  color: #fed7aa;
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+}
+
+@keyframes schematicGlow {
+  from { opacity: 0.85; }
+  to { opacity: 1; }
+}
+
+/* Hammer animation */
+#hammer {
+  transition: transform 0.4s ease;
+}
+
+#hammer:hover {
+  transform: rotate(-12deg) scale(1.1);
+}

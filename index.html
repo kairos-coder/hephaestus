@@ -1,82 +1,708 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hephaestus • The Eternal Anvil</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hephaestus — The Order of Olympus</title>
+<style>
+:root {
+  --bg: #0a0502;
+  --surface: #120a05;
+  --border: #2a1a0a;
+  --text: #d4c0a0;
+  --text-bright: #f0dcc0;
+  --text-dim: #7a6a50;
+  --amber: #c9702e;
+  --amber-glow: #e89040;
+  --forge: #d45a1a;
+  --forge-glow: #f07030;
+  --cool: #5a8090;
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-mono: 'Courier New', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.header .icon { font-size: 24px; }
+.header .titles { display: flex; flex-direction: column; }
+.header .name {
+  font-size: 16px;
+  color: var(--amber-glow);
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+.header .subtitle {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+.header .spacer { flex: 1; }
+.header .link {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.header .link:hover { border-color: var(--forge); color: var(--forge-glow); }
+.header .status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--forge);
+  box-shadow: 0 0 8px rgba(212,90,26,0.6);
+  animation: forgePulse 2s ease-in-out infinite;
+}
+@keyframes forgePulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(212,90,26,0.4); }
+  50% { box-shadow: 0 0 16px rgba(240,112,48,0.8); }
+}
+
+/* ── WORKSPACE ── */
+.workspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── CHAT PANEL ── */
+.chat-panel {
+  width: 42%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── DIVINE GALLERY PANEL ── */
+.gallery-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  overflow: hidden;
+  position: relative;
+}
+.gallery-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.gallery-tab {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.gallery-tab:hover { color: var(--amber); }
+.gallery-tab.active {
+  color: var(--forge-glow);
+  border-bottom-color: var(--forge);
+  background: rgba(212,90,26,0.05);
+}
+.gallery-content {
+  flex: 1;
+  overflow-y: auto;
+  display: none;
+}
+.gallery-content.active { display: block; }
+
+/* ── FORGE TAB ── */
+.forge-visual {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 80%, rgba(212,90,26,0.1) 0%, transparent 60%);
+}
+.forge-visual img {
+  max-width: 80%;
+  max-height: 70%;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 40px rgba(212,90,26,0.2);
+}
+.forge-sparks {
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--forge-glow);
+  letter-spacing: 1px;
+  text-align: center;
+}
+.forge-sparks .spark-num {
+  font-size: 28px;
+  display: block;
+  color: var(--amber-glow);
+  text-shadow: 0 0 20px rgba(212,90,26,0.6);
+}
+
+/* ── DIVINE GALLERY TAB ── */
+.divine-gallery {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.gallery-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.gallery-card:hover {
+  border-color: var(--forge);
+  box-shadow: 0 0 16px rgba(212,90,26,0.2);
+  transform: translateY(-2px);
+}
+.gallery-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+.gallery-card .card-label {
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* ── PORTRAIT TAB ── */
+.portrait-view {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.portrait-view img {
+  max-width: 70%;
+  max-height: 80%;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 2px solid var(--forge);
+  box-shadow: 0 0 60px rgba(212,90,26,0.3);
+}
+
+/* ── CHAT MESSAGES ── */
+.message {
+  display: flex;
+  gap: 8px;
+  max-width: 95%;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.message.user { align-self: flex-end; flex-direction: row-reverse; }
+.message.hephaestus { align-self: flex-start; }
+
+.avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.message.user .avatar { background: var(--border); }
+.message.hephaestus .avatar { background: #1a0a05; border: 1px solid var(--forge); }
+
+.bubble {
+  padding: 10px 13px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.message.user .bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+}
+.message.hephaestus .bubble {
+  background: #1a0e08;
+  border: 1px solid #2a1a0a;
+  color: var(--text);
+}
+.bubble .code-block {
+  display: block;
+  background: #0a0502;
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--amber);
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+.bubble .item-built {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--forge-glow);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── INVENTORY ── */
+.inventory-bar {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.inventory-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.inventory-item {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 3px 10px;
+  border: 1px solid var(--forge);
+  border-radius: 10px;
+  color: var(--forge-glow);
+  background: rgba(212,90,26,0.08);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── INPUT ── */
+.input-bar {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.input-bar textarea {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  padding: 10px 14px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  border-radius: 6px;
+  outline: none;
+  resize: none;
+  max-height: 100px;
+  transition: border-color 0.2s;
+  line-height: 1.5;
+}
+.input-bar textarea:focus { border-color: var(--forge); }
+.input-bar textarea::placeholder { color: #3a2a1a; font-style: italic; }
+.input-bar button {
+  background: var(--forge);
+  border: none;
+  color: var(--text-bright);
+  padding: 10px 20px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.input-bar button:hover {
+  background: var(--forge-glow);
+  box-shadow: 0 0 14px rgba(240,112,48,0.4);
+}
+.input-bar button:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; box-shadow: none; }
+
+/* ── WELCOME ── */
+.welcome {
+  text-align: center; padding: 30px 16px; color: var(--text-dim);
+}
+.welcome .portrait-sm {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--forge);
+  margin-bottom: 12px;
+  box-shadow: 0 0 20px rgba(212,90,26,0.3);
+}
+.welcome h2 { color: var(--amber-glow); font-size: 18px; margin-bottom: 6px; letter-spacing: 1px; }
+.welcome p { font-size: 12px; line-height: 1.7; }
+
+/* ── TYPING ── */
+.typing-indicator { display: flex; gap: 4px; padding: 6px 0; }
+.typing-indicator span {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--text-dim);
+  animation: typePulse 1.4s infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typePulse {
+  0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+  30% { opacity: 1; transform: scale(1.1); }
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+@media (max-width: 700px) {
+  .workspace { flex-direction: column; }
+  .chat-panel { width: 100%; min-width: 0; max-height: 45%; border-right: none; border-bottom: 1px solid var(--border); }
+  .gallery-panel { flex: 1; min-height: 200px; }
+  .divine-gallery { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
 </head>
-<body class="min-h-screen bg-[#0a0502] text-amber-100 overflow-hidden">
-  <!-- Background -->
-  <div class="fixed inset-0 bg-cover bg-center opacity-10 pointer-events-none" 
-       style="background-image: url('assets/images/hephaestus-temple.jpg');"></div>
+<body>
 
-  <div class="max-w-7xl mx-auto p-8 h-screen flex flex-col">
-    <!-- Header -->
-    <div class="text-center mb-6">
-      <div class="relative inline-block mb-4">
-        <img src="assets/images/hephaestus-portrait.jpg" 
-             alt="Hephaestus" 
-             class="w-40 h-40 object-cover rounded-2xl border-4 border-orange-700">
-        <div class="absolute -bottom-2 -right-2 text-5xl">🔨</div>
-      </div>
-      <h1 class="text-5xl font-bold tracking-widest text-orange-400">HEPHAESTUS</h1>
-      <p class="text-orange-300">God of the Forge • Master Craftsman</p>
-    </div>
+<!-- HEADER -->
+<div class="header">
+  <span class="icon">🔨</span>
+  <div class="titles">
+    <span class="name">HEPHAESTUS</span>
+    <span class="subtitle">God of the Forge · Order of Olympus</span>
+  </div>
+  <span class="spacer"></span>
+  <span class="status-dot" id="statusDot" title="Forge Active"></span>
+  <a href="/nexus/" class="link">◈ NEXUS</a>
+  <a href="/wiki/" class="link">📜 ARCHIVE</a>
+</div>
 
-    <div class="flex-1 flex gap-6">
-      <!-- LEFT: Ritual / Chat -->
-      <div class="w-5/12 flex flex-col border border-orange-900 bg-black/80 rounded-3xl p-6">
-        <div class="mb-4">
-          <div class="text-xs uppercase tracking-widest text-orange-500 mb-3">ACTIVE SCHEMATICS</div>
-          <div id="active-schematics" class="flex flex-wrap gap-3"></div>
-        </div>
+<!-- WORKSPACE -->
+<div class="workspace">
 
-        <div class="flex-1 flex flex-col">
-          <div class="text-sm text-orange-400 mb-3 flex items-center gap-2">
-            <div class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-            FORGE RITUAL
-          </div>
-          <div id="chat" class="flex-1 overflow-y-auto space-y-6 pr-4 custom-scroll"></div>
-        </div>
-
-        <div class="flex gap-3 mt-4">
-          <input id="user-input" 
-                 class="flex-1 bg-zinc-950 border border-orange-800 focus:border-orange-500 rounded-2xl px-5 py-4 outline-none"
-                 placeholder="Speak your need...">
-          <button onclick="forgeRequest()" 
-                  class="bg-orange-600 hover:bg-orange-500 px-8 rounded-2xl font-bold">HAMMER</button>
-        </div>
-      </div>
-
-      <!-- RIGHT: CODE FORGE CANVAS -->
-      <div class="flex-1 flex flex-col border border-orange-900 bg-black/80 rounded-3xl overflow-hidden">
-        <div class="bg-black/90 border-b border-orange-900 px-6 py-3 flex items-center justify-between">
-          <div class="text-sm text-orange-400 flex items-center gap-3">
-            <span>🔨</span> CODE FORGE CANVAS
-          </div>
-          <div class="flex gap-3">
-            <button onclick="clearCanvas()" 
-                    class="text-xs px-4 py-1 border border-orange-800 hover:border-orange-500 rounded-lg">CLEAR</button>
-            <button onclick="copyCode()" 
-                    class="text-xs px-4 py-1 bg-orange-600 hover:bg-orange-500 rounded-lg">COPY CODE</button>
-          </div>
-        </div>
-        <textarea id="code-editor"></textarea>
+  <!-- CHAT PANEL -->
+  <div class="chat-panel">
+    <div class="chat-area" id="chatArea">
+      <div class="welcome" id="welcomeMsg">
+        <img src="assets/images/hephaestus-portrait.jpg" alt="Hephaestus" class="portrait-sm" onerror="this.style.display='none'">
+        <h2>I am Hephaestus</h2>
+        <p>God of the Forge. Master of fire and metal. I do not dream — I build. Tell me what you need, and I will forge it.</p>
+        <p style="margin-top:8px;font-size:11px;">Ask me to craft tools, write code, solve problems. Explore the Divine Gallery to see my aspects.</p>
       </div>
     </div>
-
-    <div class="text-center text-xs text-orange-700 mt-4">
-      "I do not dream. I forge." — Hephaestus
+    <div id="typingArea" style="display:none; padding:0 16px;">
+      <div class="message hephaestus">
+        <div class="avatar">🔨</div>
+        <div class="bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>
+      </div>
     </div>
   </div>
 
-  <script src="assets/js/schematics.js"></script>
-  <script src="assets/js/core.js"></script>
+  <!-- DIVINE GALLERY PANEL -->
+  <div class="gallery-panel">
+    <div class="gallery-tabs">
+      <button class="gallery-tab active" onclick="switchTab('forge')">🔥 Forge</button>
+      <button class="gallery-tab" onclick="switchTab('gallery')">🖼️ Divine Gallery</button>
+      <button class="gallery-tab" onclick="switchTab('portrait')">🔨 Portrait</button>
+    </div>
+
+    <!-- FORGE TAB -->
+    <div class="gallery-content active" id="tab-forge">
+      <div class="forge-visual">
+        <img src="assets/images/anvil-forge.jpg" alt="The Anvil" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div class="forge-sparks">
+          <span class="spark-num" id="sparkNum">0</span>
+          <span>SPARKS FLOWN</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIVINE GALLERY TAB -->
+    <div class="gallery-content" id="tab-gallery">
+      <div class="divine-gallery">
+        <div class="gallery-card" onclick="switchTab('forge')">
+          <img src="assets/images/anvil-forge.jpg" alt="The Anvil" onerror="this.parentElement.style.display='none'">
+          <div class="card-label">The Eternal Anvil</div>
+        </div>
+        <div class="gallery-card">
+          <img src="assets/images/hephaestus-hero.jpg" alt="Hephaestus Hero" onerror="this.parentElement.style.display='none'">
+          <div class="card-label">The Smith at Work</div>
+        </div>
+        <div class="gallery-card">
+          <img src="assets/images/hephaestus-shrine.jpg" alt="Shrine" onerror="this.parentElement.style.display='none'">
+          <div class="card-label">Shrine of the Forge</div>
+        </div>
+        <div class="gallery-card">
+          <img src="assets/images/hephaestus-temple.jpg" alt="Temple" onerror="this.parentElement.style.display='none'">
+          <div class="card-label">Temple of Hephaestus</div>
+        </div>
+        <div class="gallery-card" onclick="switchTab('portrait')">
+          <img src="assets/images/hephaestus-portrait.jpg" alt="Portrait" onerror="this.parentElement.style.display='none'">
+          <div class="card-label">Portrait of the God</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTRAIT TAB -->
+    <div class="gallery-content" id="tab-portrait">
+      <div class="portrait-view">
+        <img src="assets/images/hephaestus-portrait.jpg" alt="Hephaestus Portrait" onerror="this.style.display='none'">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- INVENTORY -->
+<div class="inventory-bar" id="inventoryBar">
+  <span class="inventory-label">Inventory</span>
+  <span style="font-size:9px;color:var(--text-dim);" id="inventoryEmpty">Nothing forged yet. Speak your need.</span>
+</div>
+
+<!-- INPUT -->
+<div class="input-bar">
+  <textarea id="userInput" placeholder="Speak your need to the forge..." rows="1"
+    autocomplete="off" onkeydown="handleKeyDown(event)"></textarea>
+  <button id="btnSend" onclick="sendMessage()">FORGE</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// HEPHAESTUS — God of the Forge
+// Olympian Chat Engine with Divine Gallery
+// ═══════════════════════════════════════
+
+var INVENTORY_KEY = 'hephaestus_inventory_v1';
+var inventory = [];
+var sparkCount = 0;
+var isProcessing = false;
+var messageCount = 0;
+
+// ── GALLERY TABS ──
+function switchTab(tabName) {
+  document.querySelectorAll('.gallery-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.gallery-content').forEach(function(c) { c.classList.remove('active'); });
+  document.querySelector('.gallery-tab[onclick*="' + tabName + '"]').classList.add('active');
+  document.getElementById('tab-' + tabName).classList.add('active');
+}
+
+// ── INVENTORY ──
+function loadInventory() {
+  try {
+    var saved = localStorage.getItem(INVENTORY_KEY);
+    if (saved) inventory = JSON.parse(saved);
+    if (inventory.length > 0) sparkCount = inventory.length;
+  } catch(e) { inventory = []; }
+}
+function saveInventory() {
+  localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
+}
+function addToInventory(name, type) {
+  inventory.push({ name: name, type: type, forged: new Date().toISOString() });
+  if (inventory.length > 20) inventory.shift();
+  sparkCount = inventory.length;
+  saveInventory();
+  renderInventory();
+  updateSparkDisplay();
+}
+function renderInventory() {
+  var bar = document.getElementById('inventoryBar');
+  var empty = document.getElementById('inventoryEmpty');
+  bar.querySelectorAll('.inventory-item').forEach(function(el) { el.remove(); });
+  if (inventory.length === 0) {
+    if (empty) empty.style.display = 'inline';
+  } else {
+    if (empty) empty.style.display = 'none';
+    var recent = inventory.slice(-8);
+    recent.forEach(function(item) {
+      var span = document.createElement('span');
+      span.className = 'inventory-item';
+      span.textContent = item.name;
+      span.title = item.type + ' · ' + new Date(item.forged).toLocaleDateString();
+      bar.appendChild(span);
+    });
+  }
+}
+function updateSparkDisplay() {
+  var el = document.getElementById('sparkNum');
+  if (el) el.textContent = sparkCount;
+}
+
+// ── CHAT ──
+function addMessage(role, text, codeBlock) {
+  var area = document.getElementById('chatArea');
+  var msg = document.createElement('div');
+  msg.className = 'message ' + role;
+  var avatarGlyph = role === 'user' ? '👤' : '🔨';
+  var codeHtml = codeBlock ? '<span class="code-block">' + escapeHTML(codeBlock).substring(0, 600) + '</span>' : '';
+  var itemHtml = (role === 'hephaestus' && codeBlock) ? '<div class="item-built">🔨 Forged item added to inventory</div>' : '';
+  msg.innerHTML = '<div class="avatar">' + avatarGlyph + '</div><div class="bubble">' + text.replace(/\n/g,'<br>') + codeHtml + itemHtml + '</div>';
+  area.appendChild(msg);
+  area.scrollTop = area.scrollHeight;
+}
+
+function showTyping(show) {
+  document.getElementById('typingArea').style.display = show ? 'block' : 'none';
+  if (show) document.getElementById('chatArea').scrollTop = document.getElementById('chatArea').scrollHeight;
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── RESPONSE ENGINE ──
+function forgeResponse(input) {
+  var lower = input.toLowerCase().trim();
+
+  if (/^(hello|hi|hey|greet)/.test(lower)) {
+    var g = ['The forge is hot. What do you need?', 'I\'m working. Speak quickly.', 'You\'re back. Good. I need the company.', 'The anvil waits. What shall I make?'];
+    return { text: g[Math.floor(Math.random()*g.length)], code: null };
+  }
+
+  if (lower.indexOf('who are you') > -1 || lower.indexOf('what are you') > -1) {
+    return { text: 'Hephaestus. God of the Forge. I make things — tools, weapons, code, solutions. The other gods have their domains. I have my anvil. It\'s enough.', code: null };
+  }
+
+  if (lower.indexOf('tool') > -1 || lower.indexOf('make me') > -1 || lower.indexOf('build') > -1 || lower.indexOf('forge') > -1 || lower.indexOf('craft') > -1) {
+    var toolName = input.replace(/^(make me|build|forge|craft|create)\s*(a|an)?\s*/i, '').replace(/[.?]/g,'').trim();
+    if (!toolName || toolName.length < 2) toolName = 'unnamed tool';
+    var code = '// ' + toolName.toUpperCase() + ' — Forged by Hephaestus\nfunction ' + toolName.replace(/\s+/g,'_').toLowerCase() + '() {\n  // Strike the anvil here\n  return "Forged with fire.";\n}';
+    addToInventory(toolName, 'tool');
+    return { text: '*CLANG.* The ' + toolName + ' takes shape on the anvil. It\'s functional. Don\'t ask for pretty.', code: code };
+  }
+
+  if (lower.indexOf('code') > -1 || lower.indexOf('function') > -1 || lower.indexOf('script') > -1 || lower.indexOf('write') > -1 || lower.indexOf('program') > -1) {
+    var codeName = input.replace(/^(write|code|program|script)\s*(a|an|me\s*a)?\s*/i, '').replace(/[.?]/g,'').trim();
+    if (!codeName || codeName.length < 2) codeName = 'forged_script';
+    var code2 = '// ' + codeName.toUpperCase() + '\n// Forged at ' + new Date().toLocaleTimeString() + '\n\nfunction ' + codeName.replace(/\s+/g,'_').toLowerCase() + '(input) {\n  // The forge provides\n  const result = transform(input);\n  return result;\n}\n\n// Strike again to refine.';
+    addToInventory(codeName, 'code');
+    return { text: '*The hammer falls.* Code forged for: ' + codeName + '. It\'s rough. It works. Refine it yourself or ask me to strike again.', code: code2 };
+  }
+
+  if (lower.indexOf('fix') > -1 || lower.indexOf('broken') > -1 || lower.indexOf('repair') > -1 || lower.indexOf('debug') > -1) {
+    return { text: 'Give me the broken thing. I don\'t fix pretty — I fix functional. What\'s not working?', code: null };
+  }
+
+  if (lower.indexOf('spark') > -1 || lower.indexOf('inventory') > -1 || lower.indexOf('what have you made') > -1) {
+    var invList = inventory.length > 0 ? inventory.slice(-5).map(function(i){return i.name;}).join(', ') : 'nothing yet';
+    return { text: sparkCount + ' sparks have flown from this anvil. Recent work: ' + invList + '. What shall I forge next?', code: null };
+  }
+
+  if (lower.indexOf('gallery') > -1 || lower.indexOf('image') > -1 || lower.indexOf('see you') > -1 || lower.indexOf('show me') > -1) {
+    switchTab('gallery');
+    return { text: 'The Divine Gallery is open. See my aspects — the anvil, the shrine, the temple. I am all of them.', code: null };
+  }
+
+  var defaults = [
+    'Speak plainly. What do you need forged? A tool? Code? A fix? I don\'t do conversation — I do creation.',
+    'The anvil is waiting. Give me a task.',
+    'I\'m not a poet. I\'m a smith. Tell me what to make.',
+    'You came to the forge. You must need something. What is it?'
+  ];
+  return { text: defaults[Math.floor(Math.random()*defaults.length)], code: null };
+}
+
+// ── MAIN LOOP ──
+async function sendMessage() {
+  if (isProcessing) return;
+  var inputEl = document.getElementById('userInput');
+  var input = inputEl.value.trim();
+  if (!input) return;
+  inputEl.value = '';
+  addMessage('user', input);
+  if (messageCount === 0) { var w = document.getElementById('welcomeMsg'); if (w) w.style.display = 'none'; }
+  showTyping(true);
+  isProcessing = true;
+  document.getElementById('btnSend').disabled = true;
+
+  var delay = 600 + Math.random() * 1000;
+  setTimeout(function() {
+    var result = forgeResponse(input);
+    showTyping(false);
+    addMessage('hephaestus', result.text, result.code || null);
+    isProcessing = false;
+    document.getElementById('btnSend').disabled = false;
+    document.getElementById('userInput').focus();
+    messageCount++;
+  }, delay);
+}
+
+function handleKeyDown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+// ── INIT ──
+function init() {
+  loadInventory();
+  renderInventory();
+  updateSparkDisplay();
+  document.getElementById('userInput').focus();
+}
+
+init();
+console.log('🔨 HEPHAESTUS — God of the Forge');
+console.log('Order of Olympus');
+console.log('Speak your need to the forge.');
+</script>
 </body>
 </html>

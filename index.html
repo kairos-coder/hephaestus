@@ -1,134 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔨 Hephaestus · Pantheon Image Forge</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { --void: #08080c; --surface: #1a1820; --forge: #c07040; --forge-bright: #e08850; --spawn: #4ade80; --gold: #c8943a; }
-        body { background: var(--void); color: #d4c8c0; font-family: 'JetBrains Mono', monospace; padding: 2rem; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        h1 { color: var(--forge-bright); text-align: center; }
-        button { padding: 0.4rem 0.8rem; cursor: pointer; background: var(--surface); color: #d4c8c0; border: 1px solid var(--forge); margin: 0.2rem; }
-        button:hover { background: var(--forge); color: #000; }
-        button.primary { background: var(--forge); color: #000; }
-        .god-section { margin: 1rem 0; padding: 0.8rem; background: var(--surface); border-radius: 6px; }
-        .god-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .god-name { font-size: 1rem; color: var(--forge-bright); }
-        .image-strip { display: flex; gap: 0.4rem; overflow-x: auto; }
-        .image-strip img { width: 160px; height: 160px; object-fit: cover; border-radius: 4px; border: 1px solid #333; }
-        .image-strip .placeholder { width: 160px; height: 160px; background: #111; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #555; border-radius: 4px; }
-        .log { margin-top: 1rem; font-size: 0.7rem; color: #888; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hephaestus — The Forge · Ealdforn Studios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: radial-gradient(circle at center, #1c0f05 0%, #0a0502 100%);
+      font-family: 'Courier New', monospace;
+    }
+    .forge-fire {
+      animation: forgePulse 4s ease-in-out infinite;
+    }
+    @keyframes forgePulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+    .anvil-glow {
+      box-shadow: 0 0 60px rgba(249, 115, 22, 0.5);
+    }
+  </style>
 </head>
-<body>
-<div class="container">
-    <h1>🔨 HEPHAESTUS · PANTHEON IMAGE FORGE</h1>
-    
-    <div style="text-align:center;margin:1rem 0;">
-        <button class="primary" onclick="forgeMissing()">🔍 Forge Missing Images</button>
-        <button onclick="forgeAll()">🔥 Forge All Gods</button>
-        <button onclick="checkMissing()">📋 Check Missing</button>
-        <button onclick="refresh()">🔄 Refresh</button>
+<body class="min-h-screen text-orange-100">
+  <div class="max-w-5xl mx-auto p-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div class="text-8xl mb-6 forge-fire">🔨</div>
+      <h1 class="text-5xl font-bold tracking-widest text-orange-400">HEPHAESTUS</h1>
+      <p class="text-xl text-orange-300 mt-2">God of the Forge • Fire • Invention</p>
+      
+      <div class="flex justify-center gap-8 mt-8 text-sm">
+        <a href="https://kairos-coder.github.io/ealdforn-studios" class="hover:text-orange-400 transition">EALD FORN STUDIOS</a>
+        <a href="https://kairos-coder.github.io/nexus/" class="hover:text-orange-400 transition">◈ NEXUS</a>
+        <a href="https://kairos-coder.github.io/wiki/" class="hover:text-orange-400 transition">ARCHIVE</a>
+      </div>
     </div>
 
-    <div id="godSections"></div>
-    <div class="log" id="log">🔨 Forge ready.</div>
-</div>
+    <div class="border border-orange-900 bg-black/70 rounded-2xl p-10 anvil-glow">
+      <!-- Manifesto -->
+      <div class="mb-12">
+        <div class="text-xs tracking-widest text-orange-500 mb-3">// OLYMPIAN · VIII · THE FORGE</div>
+        <h2 class="text-3xl font-bold text-orange-400 mb-6">Hephaestus</h2>
+        
+        <p class="text-orange-200 leading-relaxed mb-6">
+          He does not dream. He builds. Hephaestus is the sound of metal on metal, the hiss of quenching, the patience of a god who knows nothing beautiful is born without violence.
+        </p>
+        
+        <div class="border-l-4 border-orange-600 pl-6 text-sm italic text-orange-300">
+          "I do not make things pretty. I make them <span class="text-orange-400">permanent</span>."
+        </div>
+      </div>
 
-<script type="module">
-const EDGE = 'https://kzcucjcyxybypncbdbws.supabase.co/functions/v1/hephaestus-forge';
-const sb = window.supabase.createClient(
-    'https://kzcucjcyxybypncbdbws.supabase.co',
-    'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw'
-);
+      <div class="grid grid-cols-2 gap-8 mb-10">
+        <div>
+          <div class="text-xs text-orange-500">DOMAIN</div>
+          <div class="text-orange-100">Craft • Fire • Technology • Invention • Endurance</div>
+        </div>
+        <div>
+          <div class="text-xs text-orange-500">SEAT</div>
+          <div class="text-orange-100">The Eternal Anvil</div>
+        </div>
+      </div>
 
-const GODS = ['hermes', 'aphrodite', 'ares', 'apollo', 'demeter', 'athena', 'hephaestus'];
+      <!-- Forge Interface -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-orange-500">●</span>
+            <span class="text-sm tracking-widest">FORGE ACTIVE — ANVIL AT TEMPERATURE</span>
+          </div>
+          <div onclick="clearForge()" class="text-xs cursor-pointer hover:text-orange-400">PURGE INVENTORY</div>
+        </div>
 
-function log(msg) { document.getElementById('log').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`; }
+        <div id="chat" class="h-[460px] overflow-y-auto space-y-8 pr-6 custom-scroll"></div>
+      </div>
 
-async function callEdge(payload) {
-    const res = await fetch(EDGE, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    return await res.json();
-}
+      <div class="flex gap-3">
+        <input 
+          id="input" 
+          type="text" 
+          class="flex-1 bg-black border border-orange-800 focus:border-orange-500 rounded-xl px-6 py-5 outline-none text-orange-100"
+          placeholder="Bring your broken thing... I will remake it stronger."
+          onkeypress="if(event.key === 'Enter') sendToForge()">
+        <button onclick="sendToForge()" 
+                class="bg-orange-700 hover:bg-orange-600 px-10 font-bold tracking-widest transition">HAMMER</button>
+      </div>
+    </div>
 
-window.forgeMissing = async () => {
-    log('🔍 Finding missing images...');
-    const check = await callEdge({ action:'missing' });
-    if (!check.missing?.length) { log('✅ All images present!'); return; }
-    log(`🔨 Forging ${check.missing.length} missing images...`);
-    await callEdge({ action:'forge-all' });
-    log('✅ Done.');
-    window.refresh();
-};
+    <div class="text-center text-xs text-orange-700 mt-8">
+      "It will hold. Until the next breaking." — Hephaestus
+    </div>
+  </div>
 
-window.forgeAll = async () => {
-    log('🔥 Forging all god images...');
-    const result = await callEdge({ action:'forge-all' });
-    for (const [god, r] of Object.entries(result.results || {})) {
-        log(`  ${god}: ${r.forged}/${r.total}`);
+  <script>
+    let messages = JSON.parse(localStorage.getItem('hephaestus_messages')) || [];
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+
+    function renderChat() {
+      chat.innerHTML = messages.map(msg => `
+        <div class="${msg.role === 'user' ? 'text-right' : 'text-left'}">
+          <div class="inline-block max-w-[85%] px-6 py-4 rounded-2xl ${msg.role === 'user' 
+            ? 'bg-orange-900/60 text-orange-100' 
+            : 'bg-amber-950 border border-orange-900/70'}">
+            ${msg.content}
+          </div>
+        </div>
+      `).join('');
+      chat.scrollTop = chat.scrollHeight;
     }
-    window.refresh();
-};
 
-window.checkMissing = async () => {
-    const check = await callEdge({ action:'missing' });
-    if (check.missing?.length) {
-        log(`❌ Missing: ${check.missing.join(', ')}`);
-    } else {
-        log('✅ All images present.');
+    function getHephaestusResponse(prompt) {
+      const responses = [
+        `The forge roars. I have taken your words and broken them down.<br><br><strong>CLANG.</strong> It is done. Stronger than you deserve, but you will need it.`,
+        `Metal remembers. I have forged your request into something that will <i>endure</i>.<br><br>Do not waste it.`,
+        `This one fought me. Good. I like it when the work resists.<br><br>Here is what I made for you.`,
+        `Heated. Hammered. Quenched in the blood of ambition.<br><br>It will hold. Probably.`,
+        `You bring me scraps... and I return weapons. This is the deal we have, mortal.`
+      ];
+      return responses[Math.floor(Math.random() * responses.length)] + `<br><br><span class="text-xs text-orange-500">— Forged at the Anvil</span>`;
     }
-};
 
-window.refresh = async () => {
-    const { data } = await sb.from('images').select('*').order('created_at', { ascending: false });
-    const sections = document.getElementById('godSections');
-    
-    sections.innerHTML = GODS.map(god => {
-        const imgs = (data || []).filter(i => i.god === god);
-        return `
-            <div class="god-section">
-                <div class="god-header">
-                    <span class="god-name">${getIcon(god)} ${god.toUpperCase()}</span>
-                    <button onclick="forgeGod('${god}')">🔨 Forge ${god}</button>
-                </div>
-                <div class="image-strip">
-                    ${getImageTypes().map(type => {
-                        const img = imgs.find(i => i.name === `${god}-${type}`);
-                        return img 
-                            ? `<img src="${img.image_url}" alt="${type}" title="${type}" />`
-                            : `<div class="placeholder">${type}</div>`;
-                    }).join('')}
-                </div>
-            </div>
-        `;
-    }).join('');
-};
+    function sendToForge() {
+      if (!input.value.trim()) return;
 
-window.forgeGod = async (god) => {
-    log(`🔨 Forging ${god}...`);
-    const result = await callEdge({ action:'forge', god });
-    log(`✅ ${god}: ${result.forged}/${result.total}`);
-    window.refresh();
-};
+      messages.push({ role: "user", content: input.value });
+      
+      const loading = document.createElement("div");
+      loading.innerHTML = `<span class="text-orange-500 italic">Heating the metal...</span>`;
+      chat.appendChild(loading);
+      chat.scrollTop = chat.scrollHeight;
 
-function getIcon(god) {
-    const icons = { hermes:'⚡', aphrodite:'💗', ares:'⚔️', apollo:'☀️', demeter:'🌾', athena:'🦉', hephaestus:'🔨' };
-    return icons[god] || '🏛️';
-}
+      setTimeout(() => {
+        chat.removeChild(loading);
+        messages.push({ role: "assistant", content: getHephaestusResponse(input.value) });
+        localStorage.setItem('hephaestus_messages', JSON.stringify(messages));
+        renderChat();
+      }, 1350);
 
-function getImageTypes() {
-    return ['hero', 'classical', 'cyber', 'rune', 'chthonic'];
-}
+      input.value = '';
+    }
 
-// Also need to update the images table
-async function ensureTable() {
-    await sb.rpc('create_images_table_if_needed').catch(() => {});
-}
+    function clearForge() {
+      if (confirm("Purge all forged works?")) {
+        messages = [];
+        localStorage.removeItem('hephaestus_messages');
+        renderChat();
+      }
+    }
 
-ensureTable();
-window.refresh();
-</script>
+    // Initialize
+    renderChat();
+  </script>
 </body>
 </html>

@@ -1,6 +1,22 @@
 // hephaestus/assets/js/core.js
 
 let messages = JSON.parse(localStorage.getItem('hephaestus_chat')) || [];
+let editor;
+
+// Initialize CodeMirror
+function initEditor() {
+  editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+    lineNumbers: true,
+    mode: "javascript",
+    theme: "monokai",
+    lineWrapping: true,
+    viewportMargin: Infinity,
+    readOnly: false
+  });
+  
+  // Default starting code
+  editor.setValue(`// Forged by Hephaestus\n// The Anvil awaits your command...\n\nconsole.log("The forge is hot.");\n`);
+}
 
 const chat = document.getElementById('chat');
 const input = document.getElementById('user-input');
@@ -8,8 +24,8 @@ const input = document.getElementById('user-input');
 function renderChat() {
   chat.innerHTML = messages.map(msg => `
     <div class="${msg.role === 'user' ? 'text-right' : 'text-left'}">
-      <div class="inline-block max-w-[85%] p-5 rounded-2xl ${msg.role === 'user' 
-        ? 'bg-orange-900/70 text-orange-100' 
+      <div class="inline-block max-w-[90%] p-5 rounded-2xl ${msg.role === 'user' 
+        ? 'bg-orange-900/70' 
         : 'bg-amber-950 border border-orange-800'}">
         ${msg.content}
       </div>
@@ -20,83 +36,118 @@ function renderChat() {
 
 function getForgeResponse(prompt) {
   const rituals = [
-    `The forge awakens.<br><br><strong>CLANG... CLANG... CLANG...</strong><br>I have taken your request through the active schematics and hammered it into something worthy.`,
-    
-    `Metal screams. Fire listens.<br><br>Your words have been reforged. This one will endure longer than most things mortals build.`,
-    
-    `Heating... Hammering... Quenching in divine fury.<br><br>It is done. Stronger than you asked for. As it should be.`,
-    
-    `The schematics aligned well this time.<br><br>Here is what I forged for you. Use it wisely. Or don't. It will hold either way.`,
-    
-    `You bring me raw ore. I return tempered steel.<br><br>This is the covenant of the Anvil.`
+    `Heating the ore of your request...<br><br>I have forged something for you in the Code Canvas.`,
+    `The schematics aligned. Hammer strikes true.<br><br>Behold what I have built for you.`,
+    `This one took some fire. Good.<br><br>Check the Code Forge Canvas.`,
+    `Raw idea → Tempered creation.<br><br>It is done.`
   ];
 
-  let response = rituals[Math.floor(Math.random() * rituals.length)];
+  return rituals[Math.floor(Math.random() * rituals.length)];
+}
 
-  // Occasionally add schematic flavor
-  if (Math.random() > 0.6 && activeSchematics.length > 0) {
-    const used = activeSchematics[Math.floor(Math.random() * activeSchematics.length)];
-    response += `<br><br><span class="text-orange-400 text-xs">→ ${used.icon} ${used.name} was dominant in this forging</span>`;
+function generateCodeSnippet(prompt) {
+  const lower = prompt.toLowerCase();
+  
+  if (lower.includes("button") || lower.includes("click")) {
+    return `// Interactive Button - Forged by Hephaestus
+const btn = document.createElement('button');
+btn.textContent = "Strike the Anvil";
+btn.className = "px-6 py-3 bg-orange-600 hover:bg-orange-500 rounded-xl font-bold transition";
+btn.onclick = () => alert("🔨 The forge echoes!");
+document.body.appendChild(btn);`;
+  }
+  
+  if (lower.includes("animation") || lower.includes("spark")) {
+    return `// Spark Animation - Forged by Hephaestus
+const spark = document.createElement('div');
+spark.style.cssText = 'position:fixed; font-size:2rem; pointer-events:none;';
+spark.textContent = '✦';
+document.body.appendChild(spark);
+
+let y = 300;
+const anim = setInterval(() => {
+  y -= 8;
+  spark.style.transform = \`translate(\${Math.random()*100-50}px, \${y}px)\`;
+  spark.style.opacity = y / 300;
+  if (y < 0) {
+    clearInterval(anim);
+    spark.remove();
+  }
+}, 30);`;
   }
 
-  return response;
+  // Default code
+  return `// Creation Forged from: "${prompt}"
+// Hephaestus • The Eternal Anvil
+
+function forgeSolution(input) {
+  console.log("🔨 Heating input:", input);
+  
+  // Your forged logic goes here
+  return {
+    status: "tempered",
+    strength: "unyielding",
+    message: "It will hold."
+  };
+}
+
+console.log(forgeSolution("${prompt}"));`;
 }
 
 function forgeRequest() {
   if (!input.value.trim()) return;
 
-  // Add user message
-  messages.push({
-    role: "user",
-    content: input.value
-  });
+  messages.push({ role: "user", content: input.value });
+  renderChat();
 
-  // Show hammering animation
-  const loadingDiv = document.createElement('div');
-  loadingDiv.innerHTML = `
-    <div class="text-orange-400 italic flex items-center gap-3">
-      <span class="animate-pulse">🔨</span> 
-      Heating the metal... Hammering... 
-    </div>`;
-  chat.appendChild(loadingDiv);
+  const loading = document.createElement('div');
+  loading.innerHTML = `<span class="text-orange-400 italic">🔨 Heating metal... Hammering...</span>`;
+  chat.appendChild(loading);
   chat.scrollTop = chat.scrollHeight;
 
   setTimeout(() => {
-    chat.removeChild(loadingDiv);
+    chat.removeChild(loading);
 
-    const response = getForgeResponse(input.value);
-    messages.push({
-      role: "assistant",
-      content: response
-    });
+    const responseText = getForgeResponse(input.value);
+    messages.push({ role: "assistant", content: responseText });
+    
+    // Forge code in the canvas
+    const code = generateCodeSnippet(input.value);
+    editor.setValue(code);
 
     localStorage.setItem('hephaestus_chat', JSON.stringify(messages));
     renderChat();
 
-    // Refresh schematics occasionally
-    if (Math.random() > 0.65) {
-      getRandomSchematics(3);
-    }
-  }, 1450);
+    // Refresh schematics
+    if (Math.random() > 0.5) getRandomSchematics(3);
+  }, 1600);
 
   input.value = '';
 }
 
-// Allow Enter key
-input.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') forgeRequest();
-});
+function copyCode() {
+  const code = editor.getValue();
+  navigator.clipboard.writeText(code).then(() => {
+    const btns = document.querySelectorAll('button');
+    const original = btns[btns.length-1].textContent;
+    btns[btns.length-1].textContent = "COPIED ✓";
+    setTimeout(() => btns[btns.length-1].textContent = "COPY CODE", 2000);
+  });
+}
 
-// Clear forge function (accessible from console or button later)
-window.clearHephaestusForge = function() {
-  if (confirm("Purge all forged works from the Anvil?")) {
-    messages = [];
-    localStorage.removeItem('hephaestus_chat');
-    renderChat();
+function clearCanvas() {
+  if (confirm("Purge the current forging?")) {
+    editor.setValue(`// New creation awaits...\n`);
   }
-};
+}
 
-// Initialize
+// Initialize everything
 window.addEventListener('load', () => {
+  initEditor();
   renderChat();
+  
+  // Enter key support
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') forgeRequest();
+  });
 });
